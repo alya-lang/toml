@@ -1,0 +1,175 @@
+# ═══════════════════════════════════════════════════════════════
+# Alya TOML Library (serializer)
+# Part of the Alya Language Ecosystem (https://github.com/alya-lang)
+# ═══════════════════════════════════════════════════════════════
+
+import "./types.alya"
+
+# Escapes special characters in string for TOML basic string format
+function format_string(s)
+    let slen = len(s)
+    let res = ""
+    let i = 0
+    while i < slen
+        let ch = char_at(s, i)
+        let c = ord(ch)
+        when c
+            is 34 then res += "\\\""
+            is 92 then res += "\\\\"
+            is 10 then res += "\\n"
+            is 13 then res += "\\r"
+            is 9  then res += "\\t"
+            is 8  then res += "\\b"
+            is 12 then res += "\\f"
+            else res += ch
+        end
+        i += 1
+    end
+    return "\"" + res + "\""
+end
+
+# Formats key; quotes if contains non-bare characters
+function format_key(k)
+    let klen = len(k)
+    if klen == 0
+        return "\"\""
+    end
+    let needs_quote = 0
+    let i = 0
+    while i < klen
+        let ch = char_at(k, i)
+        if is_bare_key_char(ch) == 0
+            needs_quote = 1
+            break
+        end
+        i += 1
+    end
+    if needs_quote == 1
+        return format_string(k)
+    else
+        return k
+    end
+end
+
+# Formats integer
+function format_int(n)
+    return str(n)
+end
+
+# Formats boolean
+function format_bool(b)
+    if b == true or b == 1
+        return "true"
+    else
+        return "false"
+    end
+end
+
+# Formats array of strings: ["a", "b"]
+function format_array_str(items)
+    let count = len(items)
+    if count == 0
+        return "[]"
+    end
+    let res = "["
+    let i = 0
+    while i < count
+        if i > 0
+            res += ", "
+        end
+        res += format_string(items[i])
+        i += 1
+    end
+    res += "]"
+    return res
+end
+
+# Formats array of integers: [1, 2, 3]
+function format_array_int(items)
+    let count = len(items)
+    if count == 0
+        return "[]"
+    end
+    let res = "["
+    let i = 0
+    while i < count
+        if i > 0
+            res += ", "
+        end
+        res += str(items[i])
+        i += 1
+    end
+    res += "]"
+    return res
+end
+
+# Formats array of booleans: [true, false]
+function format_array_bool(items)
+    let count = len(items)
+    if count == 0
+        return "[]"
+    end
+    let res = "["
+    let i = 0
+    while i < count
+        if i > 0
+            res += ", "
+        end
+        res += format_bool(items[i])
+        i += 1
+    end
+    res += "]"
+    return res
+end
+
+# ───────────────────────────────────────────────────────────────
+# TOML Builder API
+# ───────────────────────────────────────────────────────────────
+
+function builder_new()
+    return []
+end
+
+function builder_add_comment(b, comment)
+    b.push("# " + comment + "\n")
+end
+
+function builder_add_blank(b)
+    b.push("\n")
+end
+
+function builder_add_str(b, key, val)
+    b.push(format_key(key) + " = " + format_string(val) + "\n")
+end
+
+function builder_add_int(b, key, val)
+    b.push(format_key(key) + " = " + str(val) + "\n")
+end
+
+function builder_add_float(b, key, val_str)
+    b.push(format_key(key) + " = " + val_str + "\n")
+end
+
+function builder_add_bool(b, key, val)
+    b.push(format_key(key) + " = " + format_bool(val) + "\n")
+end
+
+function builder_add_array_str(b, key, items)
+    b.push(format_key(key) + " = " + format_array_str(items) + "\n")
+end
+
+function builder_add_array_int(b, key, items)
+    b.push(format_key(key) + " = " + format_array_int(items) + "\n")
+end
+
+function builder_add_table(b, section_name)
+    b.push("\n[" + section_name + "]\n")
+end
+
+function builder_add_array_table(b, section_name)
+    b.push("\n[[" + section_name + "]]\n")
+end
+
+function builder_build(b)
+    return join(b, "")
+end

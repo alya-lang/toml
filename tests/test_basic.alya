@@ -1,28 +1,149 @@
-# Test suite for toml
+# Test suite for toml library
 import "std/test"
-import "../src/lib.alya" as pkg
+import "std/fs"
+import "../src/lib.alya" as toml
 
 function main()
-    test_suite("toml Test Suite")
+    test_suite("Alya TOML Library Test Suite")
     let r = runner_new()
 
-    # 1. Basic facade function
-    let res = pkg::hello("Alya")
-    runner_assert_str_eq(r, res, "Hello, Alya!", "pkg::hello returns formatted greeting")
+    # ───────────────────────────────────────────────────────────
+    # 1. Primitives (String, Int, Float, Bool)
+    # ───────────────────────────────────────────────────────────
+    let text1 = "title = \"TOML v1.0.0\"\nport = 8080\nenabled = true\ndebug = false\nrate = 3.14\n"
+    let doc1 = toml::parse(text1)
 
-    # 2. Default parameter
-    let default_res = pkg::hello()
-    runner_assert_str_eq(r, default_res, "Hello, World!", "pkg::hello() uses default name")
+    runner_assert_str_eq(r, toml::get_str(doc1, "title"), "TOML v1.0.0", "parse string basic")
+    runner_assert_eq(r, toml::get_int(doc1, "port"), 8080, "parse integer decimal")
+    runner_assert_true(r, toml::get_bool(doc1, "enabled"), "parse boolean true")
+    runner_assert_false(r, toml::get_bool(doc1, "debug"), "parse boolean false")
 
-    # 3. Modular types & config constructor
-    let cfg = pkg::new_config("Community", 3)
-    runner_assert_str_eq(r, cfg.name, "Community", "pkg::new_config sets name correctly")
-    runner_assert_str_eq(r, cfg.prefix, "Hello", "pkg::new_config sets default prefix")
-    runner_assert_eq(r, cfg.count, 3, "pkg::new_config sets count correctly")
+    # ───────────────────────────────────────────────────────────
+    # 2. Integer Formats (Underscores, Hex, Octal, Binary)
+    # ───────────────────────────────────────────────────────────
+    let text2 = "million = 1_000_000\nhex_val = 0x1A\noct_val = 0o755\nbin_val = 0b1101\n"
+    let doc2 = toml::parse(text2)
 
-    # 4. Core custom formatter using struct
-    let custom_res = pkg::core_format_custom(cfg)
-    runner_assert_str_eq(r, custom_res, "Hello, Community!", "pkg::core_format_custom formats using config")
+    runner_assert_eq(r, toml::get_int(doc2, "million"), 1000000, "parse integer with underscores")
+    runner_assert_eq(r, toml::get_int(doc2, "hex_val"), 26, "parse hexadecimal integer (0x1A -> 26)")
+    runner_assert_eq(r, toml::get_int(doc2, "oct_val"), 493, "parse octal integer (0o755 -> 493)")
+    runner_assert_eq(r, toml::get_int(doc2, "bin_val"), 13, "parse binary integer (0b1101 -> 13)")
+
+    # ───────────────────────────────────────────────────────────
+    # 3. String Flavors (Escapes, Multiline, Literals)
+    # ───────────────────────────────────────────────────────────
+    let text3 = "escaped = \"Line 1\\nLine 2\\tTabbed\"\nraw_win = 'C:\\Users\\nodejs\\path'\n"
+    let doc3 = toml::parse(text3)
+
+    runner_assert_str_eq(r, toml::get_str(doc3, "escaped"), "Line 1\nLine 2\tTabbed", "parse basic string with escapes")
+    runner_assert_str_eq(r, toml::get_str(doc3, "raw_win"), "C:\\Users\\nodejs\\path", "parse literal string without escape")
+
+    let text3_multi = "multi_basic = \"\"\"\nFirst line\nSecond line\"\"\"\nmulti_literal = \'\'\'\nLiteral 1\nLiteral 2\'\'\'\n"
+    let doc3_multi = toml::parse(text3_multi)
+
+    runner_assert_str_eq(r, toml::get_str(doc3_multi, "multi_basic"), "First line\nSecond line", "parse multiline basic string")
+    runner_assert_str_eq(r, toml::get_str(doc3_multi, "multi_literal"), "Literal 1\nLiteral 2", "parse multiline literal string")
+
+    # ───────────────────────────────────────────────────────────
+    # 4. Arrays (Primitives, Multiline, Trailing Commas)
+    # ───────────────────────────────────────────────────────────
+    let text4 = "ports = [ 80, 443, 8080 ]\nhosts = [\n  \"alpha\",\n  \"beta\", # comment\n]\n"
+    let doc4 = toml::parse(text4)
+
+    let ports = doc4["ports"]
+    runner_assert_eq(r, len(ports), 3, "parse integer array length")
+    runner_assert_eq(r, ports[0], 80, "array element 0")
+    runner_assert_eq(r, ports[1], 443, "array element 1")
+    runner_assert_eq(r, ports[2], 8080, "array element 2")
+
+    let hosts = doc4["hosts"]
+    runner_assert_eq(r, len(hosts), 2, "multiline array with comments length")
+    runner_assert_str_eq(r, trim(hosts[0]), "alpha", "hosts[0]")
+    runner_assert_str_eq(r, trim(hosts[1]), "beta", "hosts[1]")
+
+    # ───────────────────────────────────────────────────────────
+    # 5. Inline Tables
+    # ───────────────────────────────────────────────────────────
+    let text5 = "server = { host = \"127.0.0.1\", port = 9000, active = true }\n"
+    let doc5 = toml::parse(text5)
+
+    runner_assert_str_eq(r, toml::get_str(doc5, "server.host"), "127.0.0.1", "inline table string field")
+    runner_assert_eq(r, toml::get_int(doc5, "server.port"), 9000, "inline table int field")
+    runner_assert_true(r, toml::get_bool(doc5, "server.active"), "inline table bool field")
+
+    # ───────────────────────────────────────────────────────────
+    # 6. Standard Tables & Nested Tables
+    # ───────────────────────────────────────────────────────────
+    let text6 = "[owner]\nname = \"Tom\"\n[servers.alpha]\nip = \"10.0.0.1\"\nrole = \"frontend\"\n[servers.beta]\nip = \"10.0.0.2\"\nrole = \"backend\"\n"
+    let doc6 = toml::parse(text6)
+
+    runner_assert_str_eq(r, toml::get_str(doc6, "owner.name"), "Tom", "table owner.name")
+    runner_assert_str_eq(r, toml::get_str(doc6, "servers.alpha.ip"), "10.0.0.1", "nested table servers.alpha.ip")
+    runner_assert_str_eq(r, toml::get_str(doc6, "servers.alpha.role"), "frontend", "nested table servers.alpha.role")
+    runner_assert_str_eq(r, toml::get_str(doc6, "servers.beta.ip"), "10.0.0.2", "nested table servers.beta.ip")
+    runner_assert_str_eq(r, toml::get_str(doc6, "servers.beta.role"), "backend", "nested table servers.beta.role")
+
+    # ───────────────────────────────────────────────────────────
+    # 7. Array of Tables ([[section]])
+    # ───────────────────────────────────────────────────────────
+    let text7 = "[[products]]\nname = \"Hammer\"\nsku = 738594937\n\n[[products]]\nname = \"Nail\"\nsku = 284758393\ncolor = \"gray\"\n"
+    let doc7 = toml::parse(text7)
+
+    let prods = doc7["products"]
+    runner_assert_eq(r, len(prods), 2, "array of tables length")
+    runner_assert_str_eq(r, trim(prods[0]["name"]), "Hammer", "products[0].name")
+    runner_assert_eq(r, prods[0]["sku"], 738594937, "products[0].sku")
+    runner_assert_str_eq(r, trim(prods[1]["name"]), "Nail", "products[1].name")
+    runner_assert_eq(r, prods[1]["sku"], 284758393, "products[1].sku")
+    runner_assert_str_eq(r, trim(prods[1]["color"]), "gray", "products[1].color")
+
+    # ───────────────────────────────────────────────────────────
+    # 8. Document Accessors & Modification (get/set/has)
+    # ───────────────────────────────────────────────────────────
+    runner_assert_true(r, toml::has(doc6, "servers.alpha.ip"), "has() returns true for existing key")
+    runner_assert_false(r, toml::has(doc6, "servers.alpha.missing"), "has() returns false for missing key")
+    runner_assert_str_eq(r, toml::get_str(doc6, "missing", "default_val"), "default_val", "get_str fallback default")
+
+    toml::set(doc6, "servers.alpha.ip", "10.0.0.99")
+    runner_assert_str_eq(r, toml::get_str(doc6, "servers.alpha.ip"), "10.0.0.99", "set() updates existing value")
+
+    toml::set(doc6, "servers.gamma.ip", "10.0.0.3")
+    runner_assert_str_eq(r, toml::get_str(doc6, "servers.gamma.ip"), "10.0.0.3", "set() creates nested structure")
+
+    # ───────────────────────────────────────────────────────────
+    # 9. TomlBuilder & Serialization
+    # ───────────────────────────────────────────────────────────
+    let b = toml::builder()
+    toml::builder_add_comment(b, "Generated by Alya TOML builder")
+    toml::builder_add_str(b, "package_name", "toml")
+    toml::builder_add_int(b, "version_code", 100)
+    toml::builder_add_bool(b, "release_ready", true)
+    toml::builder_add_array_str(b, "keywords", ["toml", "parser", "alya"])
+    toml::builder_add_array_int(b, "ports", [80, 443])
+    toml::builder_add_table(b, "server.http")
+    toml::builder_add_str(b, "bind", "0.0.0.0")
+    toml::builder_add_int(b, "port", 8080)
+
+    let generated_toml = toml::stringify(b)
+
+    # Re-parse serialized TOML to verify round-trip fidelity
+    let parsed_gen = toml::parse(generated_toml)
+    runner_assert_str_eq(r, toml::get_str(parsed_gen, "package_name"), "toml", "builder round-trip string")
+    runner_assert_eq(r, toml::get_int(parsed_gen, "version_code"), 100, "builder round-trip int")
+    runner_assert_true(r, toml::get_bool(parsed_gen, "release_ready"), "builder round-trip bool")
+    runner_assert_str_eq(r, toml::get_str(parsed_gen, "server.http.bind"), "0.0.0.0", "builder round-trip table string")
+    runner_assert_eq(r, toml::get_int(parsed_gen, "server.http.port"), 8080, "builder round-trip table int")
+
+    # ───────────────────────────────────────────────────────────
+    # 10. File Operations (dump_file & load_file)
+    # ───────────────────────────────────────────────────────────
+    let temp_file = "temp_test_config.toml"
+    toml::dump_file(temp_file, generated_toml)
+    runner_assert_true(r, fs_exists(temp_file), "dump_file creates file on disk")
+
+    let loaded_doc = toml::load_file(temp_file)
+    runner_assert_str_eq(r, toml::get_str(loaded_doc, "package_name"), "toml", "load_file parses saved file correctly")
+    fs_remove(temp_file)
 
     let failed = runner_summary(r)
     if failed > 0

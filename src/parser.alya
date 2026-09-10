@@ -1,0 +1,619 @@
+# ═══════════════════════════════════════════════════════════════
+# Alya TOML Library (parser)
+# Part of the Alya Language Ecosystem (https://github.com/alya-lang)
+# ═══════════════════════════════════════════════════════════════
+
+import "./types.alya"
+
+# Parses a hex string into an integer (e.g. "0xDEADBEEF" or "0x1a")
+function parse_hex(s)
+    let slen = len(s)
+    let res = 0
+    let i = 2
+    while i < slen
+        let ch = char_at(s, i)
+        if ch != "_"
+            let val = 0
+            let c = ord(ch)
+            if c >= 48 and c <= 57
+                val = c - 48
+            elif c >= 97 and c <= 102
+                val = c - 97 + 10
+            elif c >= 65 and c <= 70
+                val = c - 65 + 10
+            end
+            res = res * 16 + val
+        end
+        i += 1
+    end
+    return res
+end
+
+# Parses an octal string into an integer (e.g. "0o755")
+function parse_oct(s)
+    let slen = len(s)
+    let res = 0
+    let i = 2
+    while i < slen
+        let ch = char_at(s, i)
+        if ch != "_"
+            let c = ord(ch)
+            if c >= 48 and c <= 55
+                res = res * 8 + (c - 48)
+            end
+        end
+        i += 1
+    end
+    return res
+end
+
+# Parses a binary string into an integer (e.g. "0b1101")
+function parse_bin(s)
+    let slen = len(s)
+    let res = 0
+    let i = 2
+    while i < slen
+        let ch = char_at(s, i)
+        if ch != "_"
+            let c = ord(ch)
+            if c == 48 or c == 49
+                res = res * 2 + (c - 48)
+            end
+        end
+        i += 1
+    end
+    return res
+end
+
+# Strips underscores from integer string and converts to int
+function parse_dec_int(s)
+    let clean = ""
+    let slen = len(s)
+    let i = 0
+    while i < slen
+        let ch = char_at(s, i)
+        if ch != "_"
+            clean += ch
+        end
+        i += 1
+    end
+    return to_int(clean)
+end
+
+# Strips underscores from float string and converts to float
+function parse_dec_float(s)
+    let clean = ""
+    let slen = len(s)
+    let i = 0
+    while i < slen
+        let ch = char_at(s, i)
+        if ch != "_"
+            clean += ch
+        end
+        i += 1
+    end
+    return to_float(clean)
+end
+
+# Skips only horizontal spaces (spaces and tabs)
+function skip_spaces(text, pos, text_len)
+    while pos < text_len
+        let ch = char_at(text, pos)
+        if is_space(ch)
+            pos += 1
+        else
+            break
+        end
+    end
+    return pos
+end
+
+# Parses escape character
+function parse_escape_char(ch)
+    if ch == "n"
+        return "\n"
+    elif ch == "t"
+        return "\t"
+    elif ch == "r"
+        return "\r"
+    elif ch == "\""
+        return "\""
+    elif ch == "\\"
+        return "\\"
+    elif ch == "b"
+        return "\b"
+    elif ch == "f"
+        return "\f"
+    end
+    return ch
+end
+
+# Parses basic string "..."
+function parse_basic_string(text, pos, text_len)
+    pos += 1 # skip opening "
+    let res = ""
+    while pos < text_len
+        let ch = char_at(text, pos)
+        if ch == "\""
+            pos += 1
+            break
+        elif ch == "\\"
+            pos += 1
+            if pos < text_len
+                let esc = char_at(text, pos)
+                res += parse_escape_char(esc)
+                pos += 1
+            end
+        else
+            res += ch
+            pos += 1
+        end
+    end
+    return res, pos
+end
+
+# Parses multiline basic string """..."""
+function parse_multiline_basic_string(text, pos, text_len)
+    pos += 3 # skip opening """
+    if pos + 1 < text_len and substring(text, pos, 2) == "\r\n"
+        pos += 2
+    elif pos < text_len and char_at(text, pos) == "\n"
+        pos += 1
+    end
+
+    let res = ""
+    while pos < text_len
+        if pos + 2 < text_len and substring(text, pos, 3) == "\"\"\""
+            pos += 3
+            break
+        end
+
+        let ch = char_at(text, pos)
+        if ch == "\\"
+            pos += 1
+            if pos < text_len
+                let next_ch = char_at(text, pos)
+                if next_ch == "\r" or next_ch == "\n"
+                    # Line ending backslash: trim all whitespace and newlines
+                    while pos < text_len
+                        let wch = char_at(text, pos)
+                        if is_whitespace(wch)
+                            pos += 1
+                        else
+                            break
+                        end
+                    end
+                else
+                    res += parse_escape_char(next_ch)
+                    pos += 1
+                end
+            end
+        else
+            res += ch
+            pos += 1
+        end
+    end
+    return res, pos
+end
+
+# Parses literal string '...'
+function parse_literal_string(text, pos, text_len)
+    pos += 1 # skip opening '
+    let res = ""
+    while pos < text_len
+        let ch = char_at(text, pos)
+        if ch == "'"
+            pos += 1
+            break
+        else
+            res += ch
+            pos += 1
+        end
+    end
+    return res, pos
+end
+
+# Parses multiline literal string '''...'''
+function parse_multiline_literal_string(text, pos, text_len)
+    pos += 3 # skip opening '''
+    if pos + 1 < text_len and substring(text, pos, 2) == "\r\n"
+        pos += 2
+    elif pos < text_len and char_at(text, pos) == "\n"
+        pos += 1
+    end
+
+    let res = ""
+    while pos < text_len
+        if pos + 2 < text_len and substring(text, pos, 3) == "'''"
+            pos += 3
+            break
+        end
+        res += char_at(text, pos)
+        pos += 1
+    end
+    return res, pos
+end
+
+# Helper to check if a string matches a date/time pattern
+function is_date_or_time(s)
+    let slen = len(s)
+    if slen >= 10 and char_at(s, 4) == "-" and char_at(s, 7) == "-"
+        return 1
+    end
+    if slen >= 8 and char_at(s, 2) == ":" and char_at(s, 5) == ":"
+        return 1
+    end
+    return 0
+end
+
+# Checks if string contains a character
+function has_char(s, target)
+    let slen = len(s)
+    let i = 0
+    while i < slen
+        if char_at(s, i) == target
+            return 1
+        end
+        i += 1
+    end
+    return 0
+end
+
+# Skips whitespace and comments specifically inside arrays
+function skip_array_whitespace_and_comments(text, pos, text_len)
+    while pos < text_len
+        let ch = char_at(text, pos)
+        if is_whitespace(ch)
+            pos += 1
+        elif ch == "#"
+            while pos < text_len and char_at(text, pos) != "\n"
+                pos += 1
+            end
+            if pos < text_len and char_at(text, pos) == "\n"
+                pos += 1
+            end
+        else
+            break
+        end
+    end
+    return pos
+end
+
+# Parses a key string (bare, quoted, or dotted) until '=', ']', or '}'
+function parse_key_string(text, pos, text_len)
+    pos = skip_spaces(text, pos, text_len)
+    let k = ""
+    while pos < text_len
+        let ch = char_at(text, pos)
+        if ch == "=" or ch == "]" or ch == "}" or ch == "\r" or ch == "\n" or ch == "#"
+            break
+        elif ch == " " or ch == "\t"
+            # Could be space before '=' or inside key
+            let look = skip_spaces(text, pos, text_len)
+            if look < text_len and (char_at(text, look) == "=" or char_at(text, look) == "]" or char_at(text, look) == "}")
+                pos = look
+                break
+            else
+                pos += 1
+            end
+        elif ch == "\""
+            let s_val, new_pos = parse_basic_string(text, pos, text_len)
+            k += s_val
+            pos = new_pos
+        elif ch == "'"
+            let s_val, new_pos = parse_literal_string(text, pos, text_len)
+            k += s_val
+            pos = new_pos
+        else
+            k += ch
+            pos += 1
+        end
+    end
+    return k, pos
+end
+
+# Parses a primitive value or composite value (array / inline table)
+function parse_value(text, pos, text_len)
+    pos = skip_spaces(text, pos, text_len)
+    if pos >= text_len
+        return null, pos
+    end
+
+    # 1. Multiline Basic String
+    if pos + 2 < text_len and substring(text, pos, 3) == "\"\"\""
+        return parse_multiline_basic_string(text, pos, text_len)
+    end
+
+    # 2. Basic String
+    if char_at(text, pos) == "\""
+        return parse_basic_string(text, pos, text_len)
+    end
+
+    # 3. Multiline Literal String
+    if pos + 2 < text_len and substring(text, pos, 3) == "'''"
+        return parse_multiline_literal_string(text, pos, text_len)
+    end
+
+    # 4. Literal String
+    if char_at(text, pos) == "'"
+        return parse_literal_string(text, pos, text_len)
+    end
+
+    # 5. Inline Array
+    if char_at(text, pos) == "["
+        pos += 1
+        let arr = []
+        while pos < text_len
+            pos = skip_array_whitespace_and_comments(text, pos, text_len)
+            if pos >= text_len or char_at(text, pos) == "]"
+                break
+            end
+            let elem, new_pos = parse_value(text, pos, text_len)
+            arr.push(elem)
+            pos = skip_array_whitespace_and_comments(text, new_pos, text_len)
+            if pos < text_len and char_at(text, pos) == ","
+                pos += 1
+                pos = skip_array_whitespace_and_comments(text, pos, text_len)
+            elif pos < text_len and char_at(text, pos) == "]"
+                break
+            end
+        end
+        if pos < text_len and char_at(text, pos) == "]"
+            pos += 1
+        end
+        return arr, pos
+    end
+
+    # 6. Inline Table
+    if char_at(text, pos) == "{"
+        pos += 1
+        let tbl = map()
+        while pos < text_len
+            pos = skip_spaces(text, pos, text_len)
+            if pos >= text_len or char_at(text, pos) == "}"
+                break
+            end
+            let k_name, new_pos = parse_key_string(text, pos, text_len)
+            pos = skip_spaces(text, new_pos, text_len)
+            if pos < text_len and char_at(text, pos) == "="
+                pos += 1
+            end
+            let val, val_pos = parse_value(text, pos, text_len)
+            set_dotted_key_value(tbl, k_name, val)
+            pos = skip_spaces(text, val_pos, text_len)
+            if pos < text_len and char_at(text, pos) == ","
+                pos += 1
+            elif pos < text_len and char_at(text, pos) == "}"
+                break
+            end
+        end
+        if pos < text_len and char_at(text, pos) == "}"
+            pos += 1
+        end
+        return tbl, pos
+    end
+
+    # 7. Booleans
+    if pos + 3 < text_len and substring(text, pos, 4) == "true"
+        return true, pos + 4
+    end
+    if pos + 4 < text_len and substring(text, pos, 5) == "false"
+        return false, pos + 5
+    end
+
+    # 8. Special Floats
+    if pos + 2 < text_len and substring(text, pos, 3) == "inf"
+        return "inf", pos + 3
+    end
+    if pos + 3 < text_len and substring(text, pos, 4) == "+inf"
+        return "+inf", pos + 4
+    end
+    if pos + 3 < text_len and substring(text, pos, 4) == "-inf"
+        return "-inf", pos + 4
+    end
+    if pos + 2 < text_len and substring(text, pos, 3) == "nan"
+        return "nan", pos + 3
+    end
+    if pos + 3 < text_len and substring(text, pos, 4) == "+nan"
+        return "+nan", pos + 4
+    end
+    if pos + 3 < text_len and substring(text, pos, 4) == "-nan"
+        return "-nan", pos + 4
+    end
+
+    # 9. Numbers / Hex / Oct / Bin / Date-Time
+    let tok = ""
+    while pos < text_len
+        let ch = char_at(text, pos)
+        if ch == " " or ch == "\t" or ch == "\r" or ch == "\n" or ch == "," or ch == "]" or ch == "}" or ch == "#"
+            break
+        else
+            tok += ch
+            pos += 1
+        end
+    end
+
+    let tlen = len(tok)
+    if tlen >= 2 and (substring(tok, 0, 2) == "0x" or substring(tok, 0, 2) == "0X")
+        return parse_hex(tok), pos
+    elif tlen >= 2 and (substring(tok, 0, 2) == "0o" or substring(tok, 0, 2) == "0O")
+        return parse_oct(tok), pos
+    elif tlen >= 2 and (substring(tok, 0, 2) == "0b" or substring(tok, 0, 2) == "0B")
+        return parse_bin(tok), pos
+    elif is_date_or_time(tok) == 1
+        return tok, pos
+    elif has_char(tok, ".") == 1 or has_char(tok, "e") == 1 or has_char(tok, "E") == 1
+        return parse_dec_float(tok), pos
+    else
+        return parse_dec_int(tok), pos
+    end
+end
+
+# Sets key-value into map, navigating dotted segments if key contains '.'
+function set_dotted_key_value(target, key_str, val)
+    if has_char(key_str, ".") == 0
+        target[key_str] = val
+        return
+    end
+
+    let slen = len(key_str)
+    let cur = target
+    let seg = ""
+    let in_quotes = 0
+    let i = 0
+    while i < slen
+        let ch = char_at(key_str, i)
+        if ch == "\""
+            in_quotes = 1 - in_quotes
+        elif ch == "." and in_quotes == 0
+            if _map_has(cur, seg) == 0
+                cur[seg] = map()
+            end
+            cur = cur[seg]
+            seg = ""
+        else
+            seg += ch
+        end
+        i += 1
+    end
+    if len(seg) > 0
+        cur[seg] = val
+    end
+end
+
+# Navigates or creates nested section map in root
+function get_or_create_section(root, section_name)
+    let slen = len(section_name)
+    let cur = root
+    let seg = ""
+    let in_quotes = 0
+    let i = 0
+    while i < slen
+        let ch = char_at(section_name, i)
+        if ch == "\""
+            in_quotes = 1 - in_quotes
+        elif ch == "." and in_quotes == 0
+            if _map_has(cur, seg) == 0
+                cur[seg] = map()
+            end
+            cur = cur[seg]
+            seg = ""
+        else
+            seg += ch
+        end
+        i += 1
+    end
+    if len(seg) > 0
+        if _map_has(cur, seg) == 0
+            cur[seg] = map()
+        end
+        cur = cur[seg]
+    end
+    return cur
+end
+
+# Appends a new table into an array-of-tables section in root
+function append_array_table_section(root, section_name)
+    let slen = len(section_name)
+    let cur = root
+    let seg = ""
+    let in_quotes = 0
+    let i = 0
+    while i < slen
+        let ch = char_at(section_name, i)
+        if ch == "\""
+            in_quotes = 1 - in_quotes
+        elif ch == "." and in_quotes == 0
+            if _map_has(cur, seg) == 0
+                cur[seg] = map()
+            end
+            cur = cur[seg]
+            seg = ""
+        else
+            seg += ch
+        end
+        i += 1
+    end
+    if len(seg) > 0
+        if _map_has(cur, seg) == 0
+            cur[seg] = []
+        end
+        let arr = cur[seg]
+        let new_tbl = map()
+        arr.push(new_tbl)
+        return new_tbl
+    end
+    return cur
+end
+
+# Main TOML parser function
+function parse_toml(text)
+    let root = map()
+    let current_table = root
+    let text_len = len(text)
+    let pos = 0
+
+    while pos < text_len
+        # 1. Skip spaces
+        pos = skip_spaces(text, pos, text_len)
+        if pos >= text_len
+            break
+        end
+
+        let ch = char_at(text, pos)
+
+        # 2. Skip comments
+        if ch == "#"
+            while pos < text_len and char_at(text, pos) != "\n"
+                pos += 1
+            end
+            if pos < text_len and char_at(text, pos) == "\n"
+                pos += 1
+            end
+            continue
+        end
+
+        # 3. Skip Newlines
+        if ch == "\r" or ch == "\n"
+            pos += 1
+            continue
+        end
+
+        # 4. Section headers [table] or [[array_of_tables]]
+        if ch == "["
+            if pos + 1 < text_len and char_at(text, pos + 1) == "["
+                pos += 2 # skip '[['
+                let sec_name, new_pos = parse_key_string(text, pos, text_len)
+                pos = skip_spaces(text, new_pos, text_len)
+                if pos + 1 < text_len and substring(text, pos, 2) == "]]"
+                    pos += 2
+                end
+                current_table = append_array_table_section(root, sec_name)
+            else
+                pos += 1 # skip '['
+                let sec_name, new_pos = parse_key_string(text, pos, text_len)
+                pos = skip_spaces(text, new_pos, text_len)
+                if pos < text_len and char_at(text, pos) == "]"
+                    pos += 1
+                end
+                current_table = get_or_create_section(root, sec_name)
+            end
+            continue
+        end
+
+        # 5. Key-Value pair
+        let key_str, new_pos = parse_key_string(text, pos, text_len)
+        pos = skip_spaces(text, new_pos, text_len)
+        if pos < text_len and char_at(text, pos) == "="
+            pos += 1 # skip '='
+            pos = skip_spaces(text, pos, text_len)
+            let val, val_pos = parse_value(text, pos, text_len)
+            set_dotted_key_value(current_table, key_str, val)
+            pos = val_pos
+        else
+            pos += 1
+        end
+    end
+
+    return root
+end

@@ -1,16 +1,70 @@
-# Types and data structures for toml
-# Part of the Alya Language package ecosystem (https://github.com/alya-lang)
+# ═══════════════════════════════════════════════════════════════
+# Alya TOML Library (types)
+# Part of the Alya Language Ecosystem (https://github.com/alya-lang)
+# ═══════════════════════════════════════════════════════════════
 
-struct TomlConfig
-    name
-    prefix
-    count
+# Checks if a character is ASCII whitespace (space or tab)
+function is_space(ch)
+    let c = ord(ch)
+    return c == 32 or c == 9
 end
 
-function make_config(name = "World", count = 1)
-    return TomlConfig {
-        name: name,
-        prefix: "Hello",
-        count: count
+# Checks if a character is ASCII whitespace or newline
+function is_whitespace(ch)
+    let c = ord(ch)
+    return c == 32 or c == 9 or c == 10 or c == 13
+end
+
+# Checks if a character is a decimal digit (0-9)
+function is_digit(ch)
+    let c = ord(ch)
+    return c >= 48 and c <= 57
+end
+
+# Checks if a character is a hexadecimal digit (0-9, a-f, A-F)
+function is_hex_digit(ch)
+    let c = ord(ch)
+    return (c >= 48 and c <= 57) or (c >= 97 and c <= 102) or (c >= 65 and c <= 70)
+end
+
+# Checks if a character is an octal digit (0-7)
+function is_oct_digit(ch)
+    let c = ord(ch)
+    return c >= 48 and c <= 55
+end
+
+# Checks if a character is a binary digit (0 or 1)
+function is_bin_digit(ch)
+    let c = ord(ch)
+    return c == 48 or c == 49
+end
+
+# Checks if a character is a valid bare key character (A-Za-z0-9_-)
+function is_bare_key_char(ch)
+    let c = ord(ch)
+    return (c >= 97 and c <= 122) or (c >= 65 and c <= 90) or (c >= 48 and c <= 57) or c == 95 or c == 45
+end
+
+# Document container struct
+struct TomlDoc
+    data
+end
+
+function make_doc(initial_map)
+    return TomlDoc {
+        data: initial_map
     }
+end
+
+# Checks if a map contains a specified key
+function _map_has(m, key)
+    if m == null
+        return 0
+    end
+    for k in keys(m)
+        if k == key
+            return 1
+        end
+    end
+    return 0
 end
