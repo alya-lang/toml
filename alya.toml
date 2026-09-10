@@ -1,0 +1,13 @@
+[package]
+name = "toml"
+version = "0.1.0"
+alya-version = "0.0.5"
+entry = "src/lib.alya"
+description = "Zero-dependency TOML v1.0.0 parser and serializer for Alya"
+authors = ["Alya Language Contributors <https://github.com/alya-lang>"]
+license = "MIT"
+homepage = "https://github.com/alya-lang/alya"
+repository = "https://github.com/alya-lang/toml"
+keywords = ["alya", "alya-lang", "package", "toml", "parser", "serializer", "config"]
+
+[dependencies]
