@@ -5,14 +5,13 @@
 [![Alya](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Falya-lang%2Ftoml%2Fmain%2Falya.toml&query=%24.package.alya-version&label=Alya&color=orange&prefix=%3E%3D)](https://github.com/alya-lang/alya)
 [![Package Version](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Falya-lang%2Ftoml%2Fmain%2Falya.toml&query=%24.package.version&label=Version&color=brightgreen)](alya.toml)
 
-A zero-dependency, high-performance TOML v1.0.0 parser and serializer for the Alya Programming Language.
+A high-performance TOML v1.0.0 parser and serializer for the Alya Programming Language.
 
 ---
 
 ## 🌟 Features
 
 - ⚡ **High Performance**: Parses 29,000+ documents/sec, >1M lookups and serializations/sec.
-- 📦 **Zero Dependencies**: 100% pure Alya code without external C libraries or packages.
 - 📐 **Full TOML v1.0.0 Coverage**:
   - **Primitives**: Strings, Integers, Floats, Booleans (`true` / `false`).
   - **Integer Formats**: Decimal, Underscores (`1_000_000`), Hex (`0x1A`), Octal (`0o755`), Binary (`0b1101`).
@@ -201,15 +200,20 @@ alyac run examples/demo.alya
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please follow these steps to contribute:
+Contributions are welcome! Please follow these steps:
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/my-new-feature`)
-3. Commit your changes (`git commit -m "feat: add some feature"`)
-4. Push to the branch (`git push origin feature/my-new-feature`)
-5. Open a Pull Request
-
-Please make sure tests pass before submitting a PR.
+1. Fork the repository and clone it locally
+2. Install dependencies:
+   ```bash
+   alyac install
+   ```
+3. Create your feature branch (`git checkout -b feature/my-feature`)
+4. Verify tests and formatting before opening a PR:
+   ```bash
+   alyac test
+   alyac fmt . --check
+   ```
+5. Commit your changes (`git commit -m "feat: add feature"`) and open a Pull Request
 
 ---
 
