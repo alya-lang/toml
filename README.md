@@ -197,16 +197,6 @@ Run the runnable usage demo:
 alyac run examples/demo.alya
 ```
 
-### ⚡ Performance Numbers
-
-Measured on Windows 11 (PowerShell 7.6.5, Core i7):
-
-| Operation | Throughput | Latency |
-|---|---|---|
-| `toml::parse()` | ~29,300 ops/sec | 34 µs / doc |
-| `toml::get()` & `get_str/int()` | ~980,000 ops/sec | 1 µs / lookup |
-| `TomlBuilder` build + `stringify()` | ~1,428,000 ops/sec | 700 ns / build |
-
 ---
 
 ## 🤝 Contributing
