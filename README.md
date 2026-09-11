@@ -177,7 +177,27 @@ main()
 
 ---
 
-## ⚡ Performance Benchmarks
+## 🧪 Running Tests & Benchmarks
+
+Run the automated test suite:
+
+```bash
+alyac run tests/test_basic.alya
+```
+
+Run the performance micro-benchmarks:
+
+```bash
+alyac run benches/bench_basic.alya
+```
+
+Run the runnable usage demo:
+
+```bash
+alyac run examples/demo.alya
+```
+
+### ⚡ Performance Numbers
 
 Measured on Windows 11 (PowerShell 7.6.5, Core i7):
 
@@ -187,23 +207,19 @@ Measured on Windows 11 (PowerShell 7.6.5, Core i7):
 | `toml::get()` & `get_str/int()` | ~980,000 ops/sec | 1 µs / lookup |
 | `TomlBuilder` build + `stringify()` | ~1,428,000 ops/sec | 700 ns / build |
 
-Run benchmarks locally:
-
-```bash
-alyac run benches/bench_basic.alya
-```
-
 ---
 
-## 🧪 Running Tests & Examples
+## 🤝 Contributing
 
-```bash
-# Run all unit and integration tests (45 assertions)
-alyac run tests/test_basic.alya
+Contributions are welcome! Please follow these steps to contribute:
 
-# Run real-world example demo
-alyac run examples/demo.alya
-```
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/my-new-feature`)
+3. Commit your changes (`git commit -m "feat: add some feature"`)
+4. Push to the branch (`git push origin feature/my-new-feature`)
+5. Open a Pull Request
+
+Please make sure tests pass before submitting a PR.
 
 ---
 
