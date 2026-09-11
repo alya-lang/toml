@@ -1,9 +1,9 @@
 # toml
 
 [![CI](https://github.com/alya-lang/toml/actions/workflows/ci.yml/badge.svg)](https://github.com/alya-lang/toml/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/github/license/alya-lang/toml?color=blue&label=License)](LICENSE)
 [![Alya](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Falya-lang%2Ftoml%2Fmain%2Falya.toml&query=%24.package.alya-version&label=Alya&color=orange&prefix=%3E%3D)](https://github.com/alya-lang/alya)
-[![Package Version](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Falya-lang%2Ftoml%2Fmain%2Falya.toml&query=%24.package.version&label=version&color=brightgreen)](alya.toml)
+[![Package Version](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Falya-lang%2Ftoml%2Fmain%2Falya.toml&query=%24.package.version&label=Version&color=brightgreen)](alya.toml)
 
 A zero-dependency, high-performance TOML v1.0.0 parser and serializer for the Alya Programming Language.
 
