@@ -51,13 +51,13 @@ Add `toml` to your `alya.toml`:
 
 ```toml
 [dependencies]
-toml = { git = "https://github.com/alya-lang/toml", tag = "v0.1.0" }
+toml = { git = "https://github.com/alya-lang/toml", branch = "main" }
 ```
 
 Or install it directly via the Alya CLI:
 
 ```bash
-alyac add toml --git https://github.com/alya-lang/toml --tag v0.1.0
+alyac add toml --git https://github.com/alya-lang/toml --branch main
 alyac install
 ```
 
