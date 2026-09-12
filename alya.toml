@@ -1,6 +1,6 @@
 [package]
 name = "toml"
-version = "0.1.0"
+version = "0.2.0"
 alya-version = "0.0.9"
 entry = "src/lib.alya"
 description = "TOML v1.0.0 parser, serializer, and data processor for Alya"
