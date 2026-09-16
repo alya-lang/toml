@@ -10,23 +10,49 @@ import "./types.alya"
 import "./parser.alya"
 import "./serializer.alya"
 
+# Document container struct wrapping parsed TOML map
+pub struct TomlDoc
+    entries
+end
+
+# Factory function for TomlDoc
+pub function toml_doc_new(entries = null)
+    return TomlDoc {
+        entries: entries is not null ? entries : {}
+    }
+end
+
 # 1. Parsing APIs
 
 # Parses a TOML string into a nested map structure
-function parse(text)
+pub function parse(text)
     return parse_toml(text)
 end
 
 # Reads a TOML file from disk and parses it into a map
-function load_file(path)
+pub function load_file(path)
     let content = read_file(path)
     return parse_toml(content)
+end
+
+# Parses a TOML string into a TomlDoc struct with methods
+pub function parse_doc(text)
+    return toml_doc_new(parse_toml(text))
+end
+
+# Reads a TOML file from disk into a TomlDoc struct
+pub function load_doc(path)
+    let content = read_file(path)
+    return toml_doc_new(load_file(path))
 end
 
 # 2. Accessor Helpers
 
 # Resolves a dot-separated path (e.g. "servers.alpha.ip") in document
-function get(doc, path_str)
+pub function get(doc, path_str)
+    if doc is null or path_str is null
+        return null
+    end
     let slen = len(path_str)
     let cur = doc
     let seg = ""
@@ -54,56 +80,83 @@ function get(doc, path_str)
 end
 
 # Resolves path and returns trimmed string or default value
-function get_str(doc, path_str, default_val = "")
+pub function get_str(doc, path_str, default_val = "")
     let val = get(doc, path_str)
-    if val == null
+    if val is null
         return default_val
     end
     return trim(val)
 end
 
 # Resolves path and returns integer or default value
-function get_int(doc, path_str, default_val = 0)
+pub function get_int(doc, path_str, default_val = 0)
     let val = get(doc, path_str)
-    if val == null
+    if val is null
         return default_val
     end
     return val
 end
 
 # Resolves path and returns boolean or default value
-function get_bool(doc, path_str, default_val = false)
+pub function get_bool(doc, path_str, default_val = false)
     let val = get(doc, path_str)
-    if val == null
+    if val is null
         return default_val
     end
     return val
 end
 
 # Checks if a dot-separated path exists in document
-function has(doc, path_str)
+pub function has(doc, path_str)
     let v = get(doc, path_str)
-    return v != null
+    return v is not null
 end
 
 # Sets value at dot-separated path in document
-function set(doc, path_str, val)
+pub function set(doc, path_str, val)
     set_dotted_key_value(doc, path_str, val)
+end
+
+# --- Struct Methods on TomlDoc ---
+
+pub function TomlDoc.get(self, path_str)
+    return get(self.entries, path_str)
+end
+
+pub function TomlDoc.get_str(self, path_str)
+    return get_str(self.entries, path_str, "")
+end
+
+pub function TomlDoc.get_int(self, path_str)
+    return get_int(self.entries, path_str, 0)
+end
+
+pub function TomlDoc.get_bool(self, path_str)
+    return get_bool(self.entries, path_str, false)
+end
+
+pub function TomlDoc.has(self, path_str)
+    return has(self.entries, path_str)
+end
+
+pub function TomlDoc.set(self, path_str, val)
+    set(self.entries, path_str, val)
+    return self
 end
 
 # 3. Serialization APIs
 
 # Creates a new empty TomlBuilder
-function builder()
+pub function builder()
     return builder_new()
 end
 
 # Serializes builder buffer into TOML formatted string
-function stringify(b)
+pub function stringify(b)
     return builder_build(b)
 end
 
 # Writes TOML string directly to a file
-function dump_file(path, toml_str)
+pub function dump_file(path, toml_str)
     return write_file(path, toml_str)
 end

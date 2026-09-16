@@ -450,7 +450,7 @@ function parse_value(text, pos, text_len)
 end
 
 # Sets key-value into map, navigating dotted segments if key contains '.'
-function set_dotted_key_value(target, key_str, val)
+pub function set_dotted_key_value(target, key_str, val)
     if has_char(key_str, ".") == 0
         target[key_str] = val
         return
@@ -547,7 +547,7 @@ function append_array_table_section(root, section_name)
 end
 
 # Main TOML parser function
-function parse_toml(text)
+pub function parse_toml(text)
     let root = map()
     let current_table = root
     let text_len = len(text)

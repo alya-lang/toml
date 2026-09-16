@@ -58,27 +58,25 @@ end
 
 # Formats boolean
 function format_bool(b)
-    if b == true or b == 1
-        return "true"
-    else
-        return "false"
+    when b
+        is true, 1 => "true"
+        else => "false"
     end
 end
 
 # Formats array of strings: ["a", "b"]
 function format_array_str(items)
-    let count = len(items)
-    if count == 0
+    if items is null or len(items) == 0
         return "[]"
     end
     let res = "["
-    let i = 0
-    while i < count
-        if i > 0
+    let first = 1
+    for item in items
+        if first == 0
             res += ", "
         end
-        res += format_string(items[i])
-        i += 1
+        first = 0
+        res += format_string(item)
     end
     res += "]"
     return res
@@ -86,18 +84,17 @@ end
 
 # Formats array of integers: [1, 2, 3]
 function format_array_int(items)
-    let count = len(items)
-    if count == 0
+    if items is null or len(items) == 0
         return "[]"
     end
     let res = "["
-    let i = 0
-    while i < count
-        if i > 0
+    let first = 1
+    for item in items
+        if first == 0
             res += ", "
         end
-        res += str(items[i])
-        i += 1
+        first = 0
+        res += str(item)
     end
     res += "]"
     return res
@@ -105,18 +102,17 @@ end
 
 # Formats array of booleans: [true, false]
 function format_array_bool(items)
-    let count = len(items)
-    if count == 0
+    if items is null or len(items) == 0
         return "[]"
     end
     let res = "["
-    let i = 0
-    while i < count
-        if i > 0
+    let first = 1
+    for item in items
+        if first == 0
             res += ", "
         end
-        res += format_bool(items[i])
-        i += 1
+        first = 0
+        res += format_bool(item)
     end
     res += "]"
     return res
@@ -126,50 +122,53 @@ end
 # TOML Builder API
 # ───────────────────────────────────────────────────────────────
 
-function builder_new()
+pub function builder_new()
     return []
 end
 
-function builder_add_comment(b, comment)
+pub function builder_add_comment(b, comment)
     b.push("# " + comment + "\n")
 end
 
-function builder_add_blank(b)
+pub function builder_add_blank(b)
     b.push("\n")
 end
 
-function builder_add_str(b, key, val)
+pub function builder_add_str(b, key, val)
     b.push(format_key(key) + " = " + format_string(val) + "\n")
 end
 
-function builder_add_int(b, key, val)
+pub function builder_add_int(b, key, val)
     b.push(format_key(key) + " = " + str(val) + "\n")
 end
 
-function builder_add_float(b, key, val_str)
+pub function builder_add_float(b, key, val_str)
     b.push(format_key(key) + " = " + val_str + "\n")
 end
 
-function builder_add_bool(b, key, val)
+pub function builder_add_bool(b, key, val)
     b.push(format_key(key) + " = " + format_bool(val) + "\n")
 end
 
-function builder_add_array_str(b, key, items)
+pub function builder_add_array_str(b, key, items)
     b.push(format_key(key) + " = " + format_array_str(items) + "\n")
 end
 
-function builder_add_array_int(b, key, items)
+pub function builder_add_array_int(b, key, items)
     b.push(format_key(key) + " = " + format_array_int(items) + "\n")
 end
 
-function builder_add_table(b, section_name)
+pub function builder_add_table(b, section_name)
     b.push("\n[" + section_name + "]\n")
 end
 
-function builder_add_array_table(b, section_name)
+pub function builder_add_array_table(b, section_name)
     b.push("\n[[" + section_name + "]]\n")
 end
 
-function builder_build(b)
+pub function builder_build(b)
+    if b is null
+        return ""
+    end
     return join(b, "")
 end

@@ -3,68 +3,70 @@
 # Part of the Alya Language Ecosystem (https://github.com/alya-lang)
 # ═══════════════════════════════════════════════════════════════
 
+# Enums representing TOML data types
+pub enum TomlType
+    String = 1,
+    Integer = 2,
+    Float = 3,
+    Boolean = 4,
+    Datetime = 5,
+    Array = 6,
+    Table = 7,
+    ArrayOfTables = 8
+end
+
 # Checks if a character is ASCII whitespace (space or tab)
-function is_space(ch)
-    let c = ord(ch)
-    return c == 32 or c == 9
+pub function is_space(ch)
+    when ch
+        is " ", "\t" then return 1
+        else return 0
+    end
 end
 
 # Checks if a character is ASCII whitespace or newline
-function is_whitespace(ch)
-    let c = ord(ch)
-    return c == 32 or c == 9 or c == 10 or c == 13
+pub function is_whitespace(ch)
+    when ch
+        is " ", "\t", "\r", "\n" then return 1
+        else return 0
+    end
 end
 
 # Checks if a character is a decimal digit (0-9)
-function is_digit(ch)
+pub function is_digit(ch)
     let c = ord(ch)
     return c >= 48 and c <= 57
 end
 
 # Checks if a character is a hexadecimal digit (0-9, a-f, A-F)
-function is_hex_digit(ch)
+pub function is_hex_digit(ch)
     let c = ord(ch)
     return (c >= 48 and c <= 57) or (c >= 97 and c <= 102) or (c >= 65 and c <= 70)
 end
 
 # Checks if a character is an octal digit (0-7)
-function is_oct_digit(ch)
+pub function is_oct_digit(ch)
     let c = ord(ch)
     return c >= 48 and c <= 55
 end
 
 # Checks if a character is a binary digit (0 or 1)
-function is_bin_digit(ch)
-    let c = ord(ch)
-    return c == 48 or c == 49
+pub function is_bin_digit(ch)
+    when ch
+        is "0", "1" then return 1
+        else return 0
+    end
 end
 
 # Checks if a character is a valid bare key character (A-Za-z0-9_-)
-function is_bare_key_char(ch)
+pub function is_bare_key_char(ch)
     let c = ord(ch)
     return (c >= 97 and c <= 122) or (c >= 65 and c <= 90) or (c >= 48 and c <= 57) or c == 95 or c == 45
 end
 
-# Document container struct
-struct TomlDoc
-    data
-end
-
-function make_doc(initial_map)
-    return TomlDoc {
-        data: initial_map
-    }
-end
-
-# Checks if a map contains a specified key
-function _map_has(m, key)
-    if m == null
+# Checks if a map contains a specified key using native membership
+pub function _map_has(m, key)
+    if m is null
         return 0
     end
-    for k in keys(m)
-        if k == key
-            return 1
-        end
-    end
-    return 0
+    return key in m ? 1 : 0
 end
