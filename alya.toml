@@ -11,3 +11,7 @@ repository = "https://github.com/alya-lang/toml"
 keywords = ["alya", "alya-lang", "package", "toml", "parser", "serializer", "config"]
 
 [dependencies]
+
+# [lint]
+# disabled_rules = []
+# exclude = []
