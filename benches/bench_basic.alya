@@ -1,6 +1,5 @@
-# ═══════════════════════════════════════════════════════════════
-# Benchmark suite for toml (benches/bench_basic.alya)
-# ═══════════════════════════════════════════════════════════════
+## Benchmark suite for the toml package
+## Part of the Alya Language package ecosystem (https://github.com/alya-lang)
 
 import "std/bench"
 import "../src/lib.alya" as toml

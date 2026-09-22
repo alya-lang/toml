@@ -1,6 +1,5 @@
-# ═══════════════════════════════════════════════════════════════
-# Alya TOML Library Demo (examples/demo.alya)
-# ═══════════════════════════════════════════════════════════════
+## Demo of the toml library
+## Part of the Alya Language package ecosystem (https://github.com/alya-lang)
 
 import "../src/lib.alya" as toml
 
@@ -65,16 +64,16 @@ auth_required = true
     let debug_mode = toml::get_bool(doc, "server.debug")
     let max_conns = toml::get_int(doc, "server.max_connections")
 
-    say "  • Package: " + pkg_name + " v" + version
-    say "  • Server:  " + host + ":" + str(port)
-    say "  • Debug:   " + str(debug_mode)
-    say "  • Max Conn:" + str(max_conns)
+    say "  • Package: {pkg_name} v{version}"
+    say "  • Server:  {host}:{port}"
+    say "  • Debug:   {debug_mode}"
+    say "  • Max Conn:{max_conns}"
     say ""
 
     # 4. Inline Table Access
     say "3. Reading inline table credentials:"
     let db_user = toml::get_str(doc, "database.credentials.user")
-    say "  • DB User: " + db_user
+    say "  • DB User: {db_user}"
     say ""
 
     # 5. Dotted Table Hierarchy
@@ -84,8 +83,8 @@ auth_required = true
     let us_ip = toml::get_str(doc, "servers.us_east.ip")
     let us_role = toml::get_str(doc, "servers.us_east.role")
 
-    say "  • EU Node: " + eu_ip + " (" + eu_role + ")"
-    say "  • US Node: " + us_ip + " (" + us_role + ")"
+    say "  • EU Node: {eu_ip} ({eu_role})"
+    say "  • US Node: {us_ip} ({us_role})"
     say ""
 
     # 6. Array of Tables
@@ -101,7 +100,7 @@ auth_required = true
         if r_auth
             auth_label = "Protected"
         end
-        say "  • Route [" + auth_label + "]: " + r_path
+        say "  • Route [{auth_label}]: {r_path}"
         i += 1
     end
     say ""
@@ -110,8 +109,10 @@ auth_required = true
     say "6. Mutating document in-memory:"
     toml::set(doc, "server.port", 9090)
     toml::set(doc, "server.tls_enabled", true)
-    say "  • Updated port: " + str(toml::get_int(doc, "server.port"))
-    say "  • New TLS flag: " + str(toml::get_bool(doc, "server.tls_enabled"))
+    let new_port = toml::get_int(doc, "server.port")
+    let tls_flag = toml::get_bool(doc, "server.tls_enabled")
+    say "  • Updated port: {new_port}"
+    say "  • New TLS flag: {tls_flag}"
     say ""
 
     # 8. Programmatic TOML Builder

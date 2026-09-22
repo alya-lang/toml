@@ -1,26 +1,34 @@
-# ═══════════════════════════════════════════════════════════════
-# Alya TOML Library (parser)
-# Part of the Alya Language Ecosystem (https://github.com/alya-lang)
-# ═══════════════════════════════════════════════════════════════
+## # toml/parser
+##
+## TOML v1.0.0 document parser.
+## Part of the Alya Language package ecosystem (https://github.com/alya-lang).
+##
+## Parses strings, integers (hex/octal/binary with underscores), floats,
+## booleans, arrays, inline tables, dotted keys, sections, and
+## arrays-of-tables into nested maps.
 
 import "./types.alya"
 
-# Parses a hex string into an integer (e.g. "0xDEADBEEF" or "0x1a")
-function parse_hex(s)
+## Parses a hex string (`"0xDEADBEEF"`) into an integer.
+##
+## ### Parameters
+## - `s`: Hex source string.
+##
+## ### Returns
+## The parsed integer value.
+pub function parse_hex(s: string) -> int
     let slen = len(s)
     let res = 0
     let i = 2
     while i < slen
         let ch = char_at(s, i)
         if ch != "_"
-            let val = 0
             let c = ord(ch)
-            if c >= 48 and c <= 57
-                val = c - 48
-            elif c >= 97 and c <= 102
-                val = c - 97 + 10
-            elif c >= 65 and c <= 70
-                val = c - 65 + 10
+            let val = when c
+                is 48..57  => c - 48
+                is 97..102 => c - 97 + 10
+                is 65..70  => c - 65 + 10
+                else       => 0
             end
             res = res * 16 + val
         end
@@ -29,8 +37,14 @@ function parse_hex(s)
     return res
 end
 
-# Parses an octal string into an integer (e.g. "0o755")
-function parse_oct(s)
+## Parses an octal string (`"0o755"`) into an integer.
+##
+## ### Parameters
+## - `s`: Octal source string.
+##
+## ### Returns
+## The parsed integer value.
+pub function parse_oct(s: string) -> int
     let slen = len(s)
     let res = 0
     let i = 2
@@ -47,8 +61,14 @@ function parse_oct(s)
     return res
 end
 
-# Parses a binary string into an integer (e.g. "0b1101")
-function parse_bin(s)
+## Parses a binary string (`"0b1101"`) into an integer.
+##
+## ### Parameters
+## - `s`: Binary source string.
+##
+## ### Returns
+## The parsed integer value.
+pub function parse_bin(s: string) -> int
     let slen = len(s)
     let res = 0
     let i = 2
@@ -65,8 +85,14 @@ function parse_bin(s)
     return res
 end
 
-# Strips underscores from integer string and converts to int
-function parse_dec_int(s)
+## Strips underscores from an integer string and converts it to int.
+##
+## ### Parameters
+## - `s`: Decimal source string (underscores allowed).
+##
+## ### Returns
+## The parsed integer value.
+pub function parse_dec_int(s: string) -> int
     let clean = ""
     let slen = len(s)
     let i = 0
@@ -80,8 +106,14 @@ function parse_dec_int(s)
     return to_int(clean)
 end
 
-# Strips underscores from float string and converts to float
-function parse_dec_float(s)
+## Strips underscores from a float string and converts it to float.
+##
+## ### Parameters
+## - `s`: Decimal float source string (underscores allowed).
+##
+## ### Returns
+## The parsed float value.
+pub function parse_dec_float(s: string) -> float
     let clean = ""
     let slen = len(s)
     let i = 0
@@ -95,8 +127,16 @@ function parse_dec_float(s)
     return to_float(clean)
 end
 
-# Skips only horizontal spaces (spaces and tabs)
-function skip_spaces(text, pos, text_len)
+## Advances past horizontal spaces (spaces and tabs).
+##
+## ### Parameters
+## - `text`: Source text.
+## - `pos`: Starting position.
+## - `text_len`: Total text length.
+##
+## ### Returns
+## The first non-space position.
+pub function skip_spaces(text: string, pos: int, text_len: int) -> int
     while pos < text_len
         let ch = char_at(text, pos)
         if is_space(ch)
@@ -108,28 +148,38 @@ function skip_spaces(text, pos, text_len)
     return pos
 end
 
-# Parses escape character
-function parse_escape_char(ch)
-    if ch == "n"
-        return "\n"
-    elif ch == "t"
-        return "\t"
-    elif ch == "r"
-        return "\r"
-    elif ch == "\""
-        return "\""
-    elif ch == "\\"
-        return "\\"
-    elif ch == "b"
-        return "\b"
-    elif ch == "f"
-        return "\f"
+## Maps an escape letter to its control character.
+##
+## Unknown letters pass through unchanged.
+##
+## ### Parameters
+## - `ch`: Escape letter string.
+##
+## ### Returns
+## The escaped character string.
+pub function parse_escape_char(ch: string) -> string
+    return when ch
+        is "n"  => "\n"
+        is "t"  => "\t"
+        is "r"  => "\r"
+        is "\"" => "\""
+        is "\\" => "\\"
+        is "b"  => "\b"
+        is "f"  => "\f"
+        else    => ch
     end
-    return ch
 end
 
-# Parses basic string "..."
-function parse_basic_string(text, pos, text_len)
+## Parses a basic string (`"..."`), returning the value and end position.
+##
+## ### Parameters
+## - `text`: Source text.
+## - `pos`: Opening-quote position.
+## - `text_len`: Total text length.
+##
+## ### Returns
+## A `(value, end_pos)` tuple.
+pub function parse_basic_string(text: string, pos: int, text_len: int)
     pos += 1 # skip opening "
     let res = ""
     while pos < text_len
@@ -152,8 +202,16 @@ function parse_basic_string(text, pos, text_len)
     return res, pos
 end
 
-# Parses multiline basic string """..."""
-function parse_multiline_basic_string(text, pos, text_len)
+## Parses a multiline basic string (`"""..."""`), trimming a first newline.
+##
+## ### Parameters
+## - `text`: Source text.
+## - `pos`: Opening-quote position.
+## - `text_len`: Total text length.
+##
+## ### Returns
+## A `(value, end_pos)` tuple.
+pub function parse_multiline_basic_string(text: string, pos: int, text_len: int)
     pos += 3 # skip opening """
     if pos + 1 < text_len and substring(text, pos, 2) == "\r\n"
         pos += 2
@@ -196,8 +254,16 @@ function parse_multiline_basic_string(text, pos, text_len)
     return res, pos
 end
 
-# Parses literal string '...'
-function parse_literal_string(text, pos, text_len)
+## Parses a literal string (`'...'`), returning the value and end position.
+##
+## ### Parameters
+## - `text`: Source text.
+## - `pos`: Opening-quote position.
+## - `text_len`: Total text length.
+##
+## ### Returns
+## A `(value, end_pos)` tuple.
+pub function parse_literal_string(text: string, pos: int, text_len: int)
     pos += 1 # skip opening '
     let res = ""
     while pos < text_len
@@ -213,8 +279,16 @@ function parse_literal_string(text, pos, text_len)
     return res, pos
 end
 
-# Parses multiline literal string '''...'''
-function parse_multiline_literal_string(text, pos, text_len)
+## Parses a multiline literal string (`'''...'''`), trimming a first newline.
+##
+## ### Parameters
+## - `text`: Source text.
+## - `pos`: Opening-quote position.
+## - `text_len`: Total text length.
+##
+## ### Returns
+## A `(value, end_pos)` tuple.
+pub function parse_multiline_literal_string(text: string, pos: int, text_len: int)
     pos += 3 # skip opening '''
     if pos + 1 < text_len and substring(text, pos, 2) == "\r\n"
         pos += 2
@@ -234,8 +308,14 @@ function parse_multiline_literal_string(text, pos, text_len)
     return res, pos
 end
 
-# Helper to check if a string matches a date/time pattern
-function is_date_or_time(s)
+## Checks whether a token matches a date (`YYYY-MM-DD`) or time pattern.
+##
+## ### Parameters
+## - `s`: Candidate token string.
+##
+## ### Returns
+## `1` on pattern match, `0` otherwise.
+pub function is_date_or_time(s: string) -> int
     let slen = len(s)
     if slen >= 10 and char_at(s, 4) == "-" and char_at(s, 7) == "-"
         return 1
@@ -246,8 +326,15 @@ function is_date_or_time(s)
     return 0
 end
 
-# Checks if string contains a character
-function has_char(s, target)
+## Checks whether a string contains a target character.
+##
+## ### Parameters
+## - `s`: Haystack string.
+## - `target`: Needle character string.
+##
+## ### Returns
+## `1` when present, `0` otherwise.
+pub function has_char(s: string, target: string) -> int
     let slen = len(s)
     let i = 0
     while i < slen
@@ -259,8 +346,16 @@ function has_char(s, target)
     return 0
 end
 
-# Skips whitespace and comments specifically inside arrays
-function skip_array_whitespace_and_comments(text, pos, text_len)
+## Skips whitespace and `#` comments specifically inside arrays.
+##
+## ### Parameters
+## - `text`: Source text.
+## - `pos`: Starting position.
+## - `text_len`: Total text length.
+##
+## ### Returns
+## The first significant position.
+pub function skip_array_whitespace_and_comments(text: string, pos: int, text_len: int) -> int
     while pos < text_len
         let ch = char_at(text, pos)
         if is_whitespace(ch)
@@ -279,8 +374,16 @@ function skip_array_whitespace_and_comments(text, pos, text_len)
     return pos
 end
 
-# Parses a key string (bare, quoted, or dotted) until '=', ']', or '}'
-function parse_key_string(text, pos, text_len)
+## Parses a key string (bare, quoted, or dotted) until `=`, `]`, or `}`.
+##
+## ### Parameters
+## - `text`: Source text.
+## - `pos`: Starting position.
+## - `text_len`: Total text length.
+##
+## ### Returns
+## A `(key, end_pos)` tuple.
+pub function parse_key_string(text: string, pos: int, text_len: int)
     pos = skip_spaces(text, pos, text_len)
     let k = ""
     while pos < text_len
@@ -312,8 +415,16 @@ function parse_key_string(text, pos, text_len)
     return k, pos
 end
 
-# Parses a primitive value or composite value (array / inline table)
-function parse_value(text, pos, text_len)
+## Parses a primitive or composite value (array / inline table).
+##
+## ### Parameters
+## - `text`: Source text.
+## - `pos`: Starting position.
+## - `text_len`: Total text length.
+##
+## ### Returns
+## A `(value, end_pos)` tuple.
+pub function parse_value(text: string, pos: int, text_len: int)
     pos = skip_spaces(text, pos, text_len)
     if pos >= text_len
         return null, pos
@@ -449,8 +560,13 @@ function parse_value(text, pos, text_len)
     end
 end
 
-# Sets key-value into map, navigating dotted segments if key contains '.'
-pub function set_dotted_key_value(target, key_str, val)
+## Stores a key-value pair, navigating dotted segments in quoted aware form.
+##
+## ### Parameters
+## - `target`: Target map.
+## - `key_str`: Possibly dotted key string.
+## - `val`: Value to store.
+pub function set_dotted_key_value(target, key_str: string, val)
     if has_char(key_str, ".") == 0
         target[key_str] = val
         return
@@ -481,8 +597,15 @@ pub function set_dotted_key_value(target, key_str, val)
     end
 end
 
-# Navigates or creates nested section map in root
-function get_or_create_section(root, section_name)
+## Navigates into (or creates) a nested section map in the root document.
+##
+## ### Parameters
+## - `root`: Root document map.
+## - `section_name`: Possibly dotted section name.
+##
+## ### Returns
+## The target section map.
+pub function get_or_create_section(root, section_name: string)
     let slen = len(section_name)
     let cur = root
     let seg = ""
@@ -512,8 +635,15 @@ function get_or_create_section(root, section_name)
     return cur
 end
 
-# Appends a new table into an array-of-tables section in root
-function append_array_table_section(root, section_name)
+## Appends a new table into an array-of-tables section in the root.
+##
+## ### Parameters
+## - `root`: Root document map.
+## - `section_name`: Possibly dotted section name.
+##
+## ### Returns
+## The new table map.
+pub function append_array_table_section(root, section_name: string)
     let slen = len(section_name)
     let cur = root
     let seg = ""
@@ -546,8 +676,19 @@ function append_array_table_section(root, section_name)
     return cur
 end
 
-# Main TOML parser function
-pub function parse_toml(text)
+## Parses a full TOML document into a nested map structure.
+##
+## ### Parameters
+## - `text`: TOML document string.
+##
+## ### Returns
+## The root document map.
+##
+## ### Examples
+## ```alya
+## let doc = parse_toml("title = \"hi\"\n[server]\nhost = \"x\"")
+## ```
+pub function parse_toml(text: string)
     let root = map()
     let current_table = root
     let text_len = len(text)

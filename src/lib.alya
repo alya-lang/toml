@@ -1,55 +1,102 @@
-# ═══════════════════════════════════════════════════════════════
-# Alya TOML Library (toml)
-# Part of the Alya Language Ecosystem (https://github.com/alya-lang)
-#
-# A zero-dependency TOML v1.0.0 parser and serializer for Alya.
-# ═══════════════════════════════════════════════════════════════
+## # toml
+##
+## A zero-dependency TOML v1.0.0 parser and serializer for Alya.
+## Part of the Alya Language package ecosystem (https://github.com/alya-lang).
 
 import "std/fs"
 import "./types.alya"
 import "./parser.alya"
 import "./serializer.alya"
 
-# Document container struct wrapping parsed TOML map
+## Document container struct wrapping a parsed TOML map.
+##
+## ### Fields
+## - `entries`: Parsed document map.
 pub struct TomlDoc
     entries
 end
 
-# Factory function for TomlDoc
-pub function toml_doc_new(entries = null)
+## Factory constructor creating a `TomlDoc` from a map.
+##
+## ### Parameters
+## - `entries`: Parsed document map (defaults to an empty map when null).
+##
+## ### Returns
+## The new `TomlDoc` instance.
+pub function toml_doc_new(entries = null) -> TomlDoc
     return TomlDoc {
         entries: entries is not null ? entries : {}
     }
 end
 
+# ───────────────────────────────────────────────────────────────
 # 1. Parsing APIs
+# ───────────────────────────────────────────────────────────────
 
-# Parses a TOML string into a nested map structure
-pub function parse(text)
+## Parses a TOML string into a nested map structure.
+##
+## ### Parameters
+## - `text`: TOML document string.
+##
+## ### Returns
+## The parsed document map.
+##
+## ### Examples
+## ```alya
+## let doc = parse("title = \"hi\"")
+## ```
+pub function parse(text: string)
     return parse_toml(text)
 end
 
-# Reads a TOML file from disk and parses it into a map
-pub function load_file(path)
+## Reads a TOML file from disk and parses it into a map.
+##
+## ### Parameters
+## - `path`: File path string.
+##
+## ### Returns
+## The parsed document map.
+pub function load_file(path: string)
     let content = read_file(path)
     return parse_toml(content)
 end
 
-# Parses a TOML string into a TomlDoc struct with methods
-pub function parse_doc(text)
+## Parses a TOML string into a `TomlDoc` struct with methods.
+##
+## ### Parameters
+## - `text`: TOML document string.
+##
+## ### Returns
+## The parsed `TomlDoc` instance.
+pub function parse_doc(text: string) -> TomlDoc
     return toml_doc_new(parse_toml(text))
 end
 
-# Reads a TOML file from disk into a TomlDoc struct
-pub function load_doc(path)
+## Reads a TOML file from disk into a `TomlDoc` struct.
+##
+## ### Parameters
+## - `path`: File path string.
+##
+## ### Returns
+## The parsed `TomlDoc` instance.
+pub function load_doc(path: string) -> TomlDoc
     let content = read_file(path)
-    return toml_doc_new(load_file(path))
+    return toml_doc_new(parse_toml(content))
 end
 
+# ───────────────────────────────────────────────────────────────
 # 2. Accessor Helpers
+# ───────────────────────────────────────────────────────────────
 
-# Resolves a dot-separated path (e.g. "servers.alpha.ip") in document
-pub function get(doc, path_str)
+## Resolves a dot-separated path (e.g. `"servers.alpha.ip"`) in a document.
+##
+## ### Parameters
+## - `doc`: Document map (or null).
+## - `path_str`: Dot-separated path string (or null).
+##
+## ### Returns
+## The resolved value, or null when any segment is missing.
+pub function get(doc, path_str: string)
     if doc is null or path_str is null
         return null
     end
@@ -79,8 +126,16 @@ pub function get(doc, path_str)
     return cur
 end
 
-# Resolves path and returns trimmed string or default value
-pub function get_str(doc, path_str, default_val = "")
+## Resolves a path, returning a trimmed string or a default value.
+##
+## ### Parameters
+## - `doc`: Document map (or null).
+## - `path_str`: Dot-separated path string.
+## - `default_val`: Fallback string. Defaults to `""`.
+##
+## ### Returns
+## The trimmed value string or the default.
+pub function get_str(doc, path_str: string, default_val: string = "") -> string
     let val = get(doc, path_str)
     if val is null
         return default_val
@@ -88,8 +143,16 @@ pub function get_str(doc, path_str, default_val = "")
     return trim(val)
 end
 
-# Resolves path and returns integer or default value
-pub function get_int(doc, path_str, default_val = 0)
+## Resolves a path, returning an integer or a default value.
+##
+## ### Parameters
+## - `doc`: Document map (or null).
+## - `path_str`: Dot-separated path string.
+## - `default_val`: Fallback integer. Defaults to `0`.
+##
+## ### Returns
+## The resolved integer or the default.
+pub function get_int(doc, path_str: string, default_val: int = 0) -> int
     let val = get(doc, path_str)
     if val is null
         return default_val
@@ -97,8 +160,16 @@ pub function get_int(doc, path_str, default_val = 0)
     return val
 end
 
-# Resolves path and returns boolean or default value
-pub function get_bool(doc, path_str, default_val = false)
+## Resolves a path, returning a boolean or a default value.
+##
+## ### Parameters
+## - `doc`: Document map (or null).
+## - `path_str`: Dot-separated path string.
+## - `default_val`: Fallback boolean. Defaults to `false`.
+##
+## ### Returns
+## The resolved boolean or the default.
+pub function get_bool(doc, path_str: string, default_val = false)
     let val = get(doc, path_str)
     if val is null
         return default_val
@@ -106,57 +177,135 @@ pub function get_bool(doc, path_str, default_val = false)
     return val
 end
 
-# Checks if a dot-separated path exists in document
-pub function has(doc, path_str)
+## Checks whether a dot-separated path exists in a document.
+##
+## ### Parameters
+## - `doc`: Document map (or null).
+## - `path_str`: Dot-separated path string.
+##
+## ### Returns
+## `1` when the path resolves, `0` otherwise.
+pub function has(doc, path_str: string) -> int
     let v = get(doc, path_str)
     return v is not null
 end
 
-# Sets value at dot-separated path in document
-pub function set(doc, path_str, val)
+## Sets a value at a dot-separated path in a document.
+##
+## ### Parameters
+## - `doc`: Document map.
+## - `path_str`: Dot-separated path string.
+## - `val`: Value to store.
+pub function set(doc, path_str: string, val)
     set_dotted_key_value(doc, path_str, val)
 end
 
-# --- Struct Methods on TomlDoc ---
+# ───────────────────────────────────────────────────────────────
+# TomlDoc Struct Methods
+# ───────────────────────────────────────────────────────────────
 
-pub function TomlDoc.get(self, path_str)
+## Resolves a dot-separated path in this document.
+##
+## ### Parameters
+## - `self`: The target `TomlDoc` instance.
+## - `path_str`: Dot-separated path string.
+##
+## ### Returns
+## The resolved value, or null when any segment is missing.
+pub function TomlDoc.get(self: TomlDoc, path_str: string)
     return get(self.entries, path_str)
 end
 
-pub function TomlDoc.get_str(self, path_str)
+## Resolves a path, returning a trimmed string or `""`.
+##
+## ### Parameters
+## - `self`: The target `TomlDoc` instance.
+## - `path_str`: Dot-separated path string.
+##
+## ### Returns
+## The trimmed value string or `""`.
+pub function TomlDoc.get_str(self: TomlDoc, path_str: string) -> string
     return get_str(self.entries, path_str, "")
 end
 
-pub function TomlDoc.get_int(self, path_str)
+## Resolves a path, returning an integer or `0`.
+##
+## ### Parameters
+## - `self`: The target `TomlDoc` instance.
+## - `path_str`: Dot-separated path string.
+##
+## ### Returns
+## The resolved integer or `0`.
+pub function TomlDoc.get_int(self: TomlDoc, path_str: string) -> int
     return get_int(self.entries, path_str, 0)
 end
 
-pub function TomlDoc.get_bool(self, path_str)
+## Resolves a path, returning a boolean or `false`.
+##
+## ### Parameters
+## - `self`: The target `TomlDoc` instance.
+## - `path_str`: Dot-separated path string.
+##
+## ### Returns
+## The resolved boolean or `false`.
+pub function TomlDoc.get_bool(self: TomlDoc, path_str: string)
     return get_bool(self.entries, path_str, false)
 end
 
-pub function TomlDoc.has(self, path_str)
+## Checks whether a dot-separated path exists in this document.
+##
+## ### Parameters
+## - `self`: The target `TomlDoc` instance.
+## - `path_str`: Dot-separated path string.
+##
+## ### Returns
+## `1` when the path resolves, `0` otherwise.
+pub function TomlDoc.has(self: TomlDoc, path_str: string) -> int
     return has(self.entries, path_str)
 end
 
-pub function TomlDoc.set(self, path_str, val)
+## Sets a value at a dot-separated path, returning this document.
+##
+## ### Parameters
+## - `self`: The target `TomlDoc` instance.
+## - `path_str`: Dot-separated path string.
+## - `val`: Value to store.
+##
+## ### Returns
+## The updated `TomlDoc` instance.
+pub function TomlDoc.set(self: TomlDoc, path_str: string, val) -> TomlDoc
     set(self.entries, path_str, val)
     return self
 end
 
+# ───────────────────────────────────────────────────────────────
 # 3. Serialization APIs
+# ───────────────────────────────────────────────────────────────
 
-# Creates a new empty TomlBuilder
-pub function builder()
+## Creates a new empty builder line buffer.
+##
+## ### Returns
+## An empty line array accepting `builder_add_*` entries.
+pub function builder() -> array
     return builder_new()
 end
 
-# Serializes builder buffer into TOML formatted string
-pub function stringify(b)
+## Serializes a builder buffer into a TOML formatted string.
+##
+## ### Parameters
+## - `b`: Builder line buffer.
+##
+## ### Returns
+## The joined TOML document string.
+pub function stringify(b: array) -> string
     return builder_build(b)
 end
 
-# Writes TOML string directly to a file
-pub function dump_file(path, toml_str)
+## Writes a TOML string directly to a file.
+##
+## ### Parameters
+## - `path`: File path string.
+## - `toml_str`: TOML document string.
+pub function dump_file(path: string, toml_str: string)
     return write_file(path, toml_str)
 end

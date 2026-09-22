@@ -1,12 +1,21 @@
-# ═══════════════════════════════════════════════════════════════
-# Alya TOML Library (serializer)
-# Part of the Alya Language Ecosystem (https://github.com/alya-lang)
-# ═══════════════════════════════════════════════════════════════
+## # toml/serializer
+##
+## TOML value formatting and document builder.
+## Part of the Alya Language package ecosystem (https://github.com/alya-lang).
+##
+## Formats strings, keys, scalars, and arrays into TOML syntax, and offers
+## a line-buffer builder for sections, tables, and comments.
 
 import "./types.alya"
 
-# Escapes special characters in string for TOML basic string format
-function format_string(s)
+## Escapes special characters for TOML basic string format.
+##
+## ### Parameters
+## - `s`: Raw string value.
+##
+## ### Returns
+## The double-quoted, escaped TOML string.
+pub function format_string(s: string) -> string
     let slen = len(s)
     let res = ""
     let i = 0
@@ -25,11 +34,17 @@ function format_string(s)
         end
         i += 1
     end
-    return "\"" + res + "\""
+    return "\"{res}\""
 end
 
-# Formats key; quotes if contains non-bare characters
-function format_key(k)
+## Formats a key, quoting it when it holds non-bare characters.
+##
+## ### Parameters
+## - `k`: Key string.
+##
+## ### Returns
+## The bare or quoted key form.
+pub function format_key(k: string) -> string
     let klen = len(k)
     if klen == 0
         return "\"\""
@@ -51,21 +66,39 @@ function format_key(k)
     end
 end
 
-# Formats integer
-function format_int(n)
+## Formats an integer value.
+##
+## ### Parameters
+## - `n`: Integer value.
+##
+## ### Returns
+## The decimal string form.
+pub function format_int(n: int) -> string
     return str(n)
 end
 
-# Formats boolean
-function format_bool(b)
-    when b
+## Formats a boolean value.
+##
+## ### Parameters
+## - `b`: Boolean or integer flag.
+##
+## ### Returns
+## `"true"` or `"false"`.
+pub function format_bool(b) -> string
+    return when b
         is true, 1 => "true"
         else => "false"
     end
 end
 
-# Formats array of strings: ["a", "b"]
-function format_array_str(items)
+## Formats a string array (`["a", "b"]`).
+##
+## ### Parameters
+## - `items`: String element array (or null).
+##
+## ### Returns
+## The TOML array literal string.
+pub function format_array_str(items: array) -> string
     if items is null or len(items) == 0
         return "[]"
     end
@@ -82,8 +115,14 @@ function format_array_str(items)
     return res
 end
 
-# Formats array of integers: [1, 2, 3]
-function format_array_int(items)
+## Formats an integer array (`[1, 2, 3]`).
+##
+## ### Parameters
+## - `items`: Integer element array (or null).
+##
+## ### Returns
+## The TOML array literal string.
+pub function format_array_int(items: array) -> string
     if items is null or len(items) == 0
         return "[]"
     end
@@ -100,8 +139,14 @@ function format_array_int(items)
     return res
 end
 
-# Formats array of booleans: [true, false]
-function format_array_bool(items)
+## Formats a boolean array (`[true, false]`).
+##
+## ### Parameters
+## - `items`: Boolean element array (or null).
+##
+## ### Returns
+## The TOML array literal string.
+pub function format_array_bool(items: array) -> string
     if items is null or len(items) == 0
         return "[]"
     end
@@ -122,51 +167,127 @@ end
 # TOML Builder API
 # ───────────────────────────────────────────────────────────────
 
-pub function builder_new()
+## Creates a new empty builder line buffer.
+##
+## ### Returns
+## An empty line array accepting `builder_add_*` entries.
+pub function builder_new() -> array
     return []
 end
 
-pub function builder_add_comment(b, comment)
-    b.push("# " + comment + "\n")
+## Appends a `#` comment line to the builder buffer.
+##
+## ### Parameters
+## - `b`: Builder line buffer.
+## - `comment`: Comment text.
+pub function builder_add_comment(b: array, comment: string)
+    b.push("# {comment}\n")
 end
 
-pub function builder_add_blank(b)
+## Appends a blank line to the builder buffer.
+##
+## ### Parameters
+## - `b`: Builder line buffer.
+pub function builder_add_blank(b: array)
     b.push("\n")
 end
 
-pub function builder_add_str(b, key, val)
-    b.push(format_key(key) + " = " + format_string(val) + "\n")
+## Appends a `key = "string"` entry to the builder buffer.
+##
+## ### Parameters
+## - `b`: Builder line buffer.
+## - `key`: Entry key string.
+## - `val`: String value.
+pub function builder_add_str(b: array, key: string, val: string)
+    let fk = format_key(key)
+    let fv = format_string(val)
+    b.push("{fk} = {fv}\n")
 end
 
-pub function builder_add_int(b, key, val)
-    b.push(format_key(key) + " = " + str(val) + "\n")
+## Appends a `key = 123` entry to the builder buffer.
+##
+## ### Parameters
+## - `b`: Builder line buffer.
+## - `key`: Entry key string.
+## - `val`: Integer value.
+pub function builder_add_int(b: array, key: string, val: int)
+    let fk = format_key(key)
+    b.push("{fk} = {val}\n")
 end
 
-pub function builder_add_float(b, key, val_str)
-    b.push(format_key(key) + " = " + val_str + "\n")
+## Appends a `key = 1.5` entry to the builder buffer.
+##
+## ### Parameters
+## - `b`: Builder line buffer.
+## - `key`: Entry key string.
+## - `val_str`: Pre-formatted float string.
+pub function builder_add_float(b: array, key: string, val_str: string)
+    let fk = format_key(key)
+    b.push("{fk} = {val_str}\n")
 end
 
-pub function builder_add_bool(b, key, val)
-    b.push(format_key(key) + " = " + format_bool(val) + "\n")
+## Appends a `key = true` entry to the builder buffer.
+##
+## ### Parameters
+## - `b`: Builder line buffer.
+## - `key`: Entry key string.
+## - `val`: Boolean or integer flag.
+pub function builder_add_bool(b: array, key: string, val)
+    let fk = format_key(key)
+    let fv = format_bool(val)
+    b.push("{fk} = {fv}\n")
 end
 
-pub function builder_add_array_str(b, key, items)
-    b.push(format_key(key) + " = " + format_array_str(items) + "\n")
+## Appends a string array entry to the builder buffer.
+##
+## ### Parameters
+## - `b`: Builder line buffer.
+## - `key`: Entry key string.
+## - `items`: String element array.
+pub function builder_add_array_str(b: array, key: string, items: array)
+    let fk = format_key(key)
+    let fv = format_array_str(items)
+    b.push("{fk} = {fv}\n")
 end
 
-pub function builder_add_array_int(b, key, items)
-    b.push(format_key(key) + " = " + format_array_int(items) + "\n")
+## Appends an integer array entry to the builder buffer.
+##
+## ### Parameters
+## - `b`: Builder line buffer.
+## - `key`: Entry key string.
+## - `items`: Integer element array.
+pub function builder_add_array_int(b: array, key: string, items: array)
+    let fk = format_key(key)
+    let fv = format_array_int(items)
+    b.push("{fk} = {fv}\n")
 end
 
-pub function builder_add_table(b, section_name)
-    b.push("\n[" + section_name + "]\n")
+## Appends a `[section]` table header to the builder buffer.
+##
+## ### Parameters
+## - `b`: Builder line buffer.
+## - `section_name`: Section name string.
+pub function builder_add_table(b: array, section_name: string)
+    b.push("\n[{section_name}]\n")
 end
 
-pub function builder_add_array_table(b, section_name)
-    b.push("\n[[" + section_name + "]]\n")
+## Appends a `[[section]]` array-table header to the builder buffer.
+##
+## ### Parameters
+## - `b`: Builder line buffer.
+## - `section_name`: Section name string.
+pub function builder_add_array_table(b: array, section_name: string)
+    b.push("\n[[{section_name}]]\n")
 end
 
-pub function builder_build(b)
+## Serializes the builder buffer into a TOML formatted string.
+##
+## ### Parameters
+## - `b`: Builder line buffer (or null).
+##
+## ### Returns
+## The joined TOML document string.
+pub function builder_build(b: array) -> string
     if b is null
         return ""
     end

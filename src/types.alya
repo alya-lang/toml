@@ -1,9 +1,12 @@
-# ═══════════════════════════════════════════════════════════════
-# Alya TOML Library (types)
-# Part of the Alya Language Ecosystem (https://github.com/alya-lang)
-# ═══════════════════════════════════════════════════════════════
+## # toml/types
+##
+## TOML data types and character classifiers.
+## Part of the Alya Language package ecosystem (https://github.com/alya-lang).
+##
+## Defines value type discriminators plus ASCII classifiers shared by the
+## parser and serializer.
 
-# Enums representing TOML data types
+## Enumeration of TOML value data types.
 pub enum TomlType
     String = 1,
     Integer = 2,
@@ -15,56 +18,105 @@ pub enum TomlType
     ArrayOfTables = 8
 end
 
-# Checks if a character is ASCII whitespace (space or tab)
-pub function is_space(ch)
+## Checks whether a character is ASCII horizontal whitespace (space or tab).
+##
+## ### Parameters
+## - `ch`: Single-character string.
+##
+## ### Returns
+## `1` when the character is a space or tab, `0` otherwise.
+pub function is_space(ch: string) -> int
     when ch
         is " ", "\t" then return 1
         else return 0
     end
 end
 
-# Checks if a character is ASCII whitespace or newline
-pub function is_whitespace(ch)
+## Checks whether a character is ASCII whitespace or a newline.
+##
+## ### Parameters
+## - `ch`: Single-character string.
+##
+## ### Returns
+## `1` for space, tab, carriage return, or newline; `0` otherwise.
+pub function is_whitespace(ch: string) -> int
     when ch
         is " ", "\t", "\r", "\n" then return 1
         else return 0
     end
 end
 
-# Checks if a character is a decimal digit (0-9)
-pub function is_digit(ch)
+## Checks whether a character is a decimal digit (`0-9`).
+##
+## ### Parameters
+## - `ch`: Single-character string.
+##
+## ### Returns
+## `1` when the character is a digit, `0` otherwise.
+pub function is_digit(ch: string) -> int
     let c = ord(ch)
     return c >= 48 and c <= 57
 end
 
-# Checks if a character is a hexadecimal digit (0-9, a-f, A-F)
-pub function is_hex_digit(ch)
+## Checks whether a character is a hexadecimal digit (`0-9`, `a-f`, `A-F`).
+##
+## ### Parameters
+## - `ch`: Single-character string.
+##
+## ### Returns
+## `1` when the character is a hex digit, `0` otherwise.
+pub function is_hex_digit(ch: string) -> int
     let c = ord(ch)
     return (c >= 48 and c <= 57) or (c >= 97 and c <= 102) or (c >= 65 and c <= 70)
 end
 
-# Checks if a character is an octal digit (0-7)
-pub function is_oct_digit(ch)
+## Checks whether a character is an octal digit (`0-7`).
+##
+## ### Parameters
+## - `ch`: Single-character string.
+##
+## ### Returns
+## `1` when the character is an octal digit, `0` otherwise.
+pub function is_oct_digit(ch: string) -> int
     let c = ord(ch)
     return c >= 48 and c <= 55
 end
 
-# Checks if a character is a binary digit (0 or 1)
-pub function is_bin_digit(ch)
+## Checks whether a character is a binary digit (`0` or `1`).
+##
+## ### Parameters
+## - `ch`: Single-character string.
+##
+## ### Returns
+## `1` when the character is a binary digit, `0` otherwise.
+pub function is_bin_digit(ch: string) -> int
     when ch
         is "0", "1" then return 1
         else return 0
     end
 end
 
-# Checks if a character is a valid bare key character (A-Za-z0-9_-)
-pub function is_bare_key_char(ch)
+## Checks whether a character is a valid bare key character (`A-Za-z0-9_-`).
+##
+## ### Parameters
+## - `ch`: Single-character string.
+##
+## ### Returns
+## `1` when the character may appear unquoted in keys, `0` otherwise.
+pub function is_bare_key_char(ch: string) -> int
     let c = ord(ch)
     return (c >= 97 and c <= 122) or (c >= 65 and c <= 90) or (c >= 48 and c <= 57) or c == 95 or c == 45
 end
 
-# Checks if a map contains a specified key using native membership
-pub function _map_has(m, key)
+## Checks whether a map contains a key using native membership.
+##
+## ### Parameters
+## - `m`: Target map (or null).
+## - `key`: Key string.
+##
+## ### Returns
+## `1` when the key exists, `0` otherwise.
+pub function _map_has(m, key: string) -> int
     if m is null
         return 0
     end
