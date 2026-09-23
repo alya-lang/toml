@@ -3,7 +3,6 @@
 ## A zero-dependency TOML v1.0.0 parser and serializer for Alya.
 ## Part of the Alya Language package ecosystem (https://github.com/alya-lang).
 
-import "std/fs"
 import "./types.alya"
 import "./parser.alya"
 import "./serializer.alya"
