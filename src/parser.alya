@@ -388,28 +388,28 @@ pub function parse_key_string(text: string, pos: int, text_len: int)
     let k = ""
     while pos < text_len
         let ch = char_at(text, pos)
-        if ch == "=" or ch == "]" or ch == "}" or ch == "\r" or ch == "\n" or ch == "#"
-            break
-        elif ch == " " or ch == "\t"
-            # Could be space before '=' or inside key
-            let look = skip_spaces(text, pos, text_len)
-            if look < text_len and (char_at(text, look) == "=" or char_at(text, look) == "]" or char_at(text, look) == "}")
-                pos = look
-                break
-            else
+        when ch
+            is "=", "]", "}", "\r", "\n", "#" => break
+            is " ", "\t" =>
+                # Could be space before '=' or inside key
+                let look = skip_spaces(text, pos, text_len)
+                if look < text_len and (char_at(text, look) == "=" or char_at(text, look) == "]" or char_at(text, look) == "}")
+                    pos = look
+                    break
+                else
+                    pos += 1
+                end
+            is "\"" =>
+                let s_val, new_pos = parse_basic_string(text, pos, text_len)
+                k += s_val
+                pos = new_pos
+            is "'" =>
+                let s_val, new_pos = parse_literal_string(text, pos, text_len)
+                k += s_val
+                pos = new_pos
+            else =>
+                k += ch
                 pos += 1
-            end
-        elif ch == "\""
-            let s_val, new_pos = parse_basic_string(text, pos, text_len)
-            k += s_val
-            pos = new_pos
-        elif ch == "'"
-            let s_val, new_pos = parse_literal_string(text, pos, text_len)
-            k += s_val
-            pos = new_pos
-        else
-            k += ch
-            pos += 1
         end
     end
     return k, pos

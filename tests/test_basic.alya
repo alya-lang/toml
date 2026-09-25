@@ -20,6 +20,7 @@ function main()
     test_builder(r)
     test_file_ops(r)
     test_tomldoc_struct_methods(r)
+    test_key_variants(r)
 
     let failed = runner_summary(r)
     if failed > 0
@@ -169,4 +170,13 @@ function test_tomldoc_struct_methods(r)
     runner_assert_eq(r, toml::TomlType.String, 1, "TomlType.String variant")
     runner_assert_eq(r, toml::TomlType.Integer, 2, "TomlType.Integer variant")
     runner_assert_eq(r, toml::TomlType.Table, 7, "TomlType.Table variant")
+end
+
+function test_key_variants(r)
+    let text = "bare = 1\n\"quoted key\" = 2\n'literal key' = 3\nspaced = 4\n"
+    let doc = toml::parse(text)
+    runner_assert_eq(r, toml::get_int(doc, "bare"), 1, "parse bare key")
+    runner_assert_eq(r, toml::get_int(doc, "quoted key"), 2, "parse basic quoted key")
+    runner_assert_eq(r, toml::get_int(doc, "literal key"), 3, "parse literal quoted key")
+    runner_assert_eq(r, toml::get_int(doc, "spaced"), 4, "parse key with space before '='")
 end
