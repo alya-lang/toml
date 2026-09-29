@@ -61,6 +61,23 @@ alya add toml --git https://github.com/alya-lang/toml --branch main
 alya install
 ```
 
+### Package Features
+
+| Feature | Default | Description |
+|:---|:---:|:---|
+| `io` | ✅ | File loading/saving (`load_file`, `load_doc`, `dump_file`). Without it only in-memory parse/accessors remain. |
+| `builder` | ✅ | Programmatic TOML builder (`builder()`, `builder_add_*`, `stringify`). |
+
+```bash
+# Full build (default)
+alya install
+alya test
+
+# Slim build (parse only)
+alya install --no-default-features
+alya test --no-default-features
+```
+
 ---
 
 ## 🚀 Quick Start

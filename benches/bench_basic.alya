@@ -46,6 +46,13 @@ role = \"frontend\"
     end
     bench_stop(runner, "toml::get() & get_str/int() 50,000 lookups")
 
+    @cfg(feature = "builder")
+    bench_builder(runner)
+    bench_summary(runner)
+end
+
+@cfg(feature = "builder")
+function bench_builder(runner)
     # 3. TomlBuilder Serialization Benchmark (20,000 iterations)
     bench_start(runner, 20000)
     let k = 0
@@ -60,8 +67,5 @@ role = \"frontend\"
         k += 1
     end
     bench_stop(runner, "TomlBuilder build + stringify() 20,000 iterations")
-
-    bench_summary(runner)
 end
-
 main()

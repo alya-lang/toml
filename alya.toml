@@ -12,6 +12,11 @@ keywords = ["alya", "alya-lang", "package", "toml", "parser", "serializer", "con
 
 [dependencies]
 
+[features]
+default = ["io", "builder"]
+io = []
+builder = []
+
 # [lint]
 # disabled_rules = []
 # exclude = []

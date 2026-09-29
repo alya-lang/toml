@@ -5,6 +5,7 @@
 
 import "./types.alya"
 import "./parser.alya"
+@cfg(feature = "builder")
 import "./serializer.alya"
 
 ## Document container struct wrapping a parsed TOML map.
@@ -50,11 +51,14 @@ end
 
 ## Reads a TOML file from disk and parses it into a map.
 ##
+## Requires the `io` feature (default-on).
+##
 ## ### Parameters
 ## - `path`: File path string.
 ##
 ## ### Returns
 ## The parsed document map.
+@cfg(feature = "io")
 pub function load_file(path: string)
     let content = read_file(path)
     return parse_toml(content)
@@ -73,11 +77,14 @@ end
 
 ## Reads a TOML file from disk into a `TomlDoc` struct.
 ##
+## Requires the `io` feature (default-on).
+##
 ## ### Parameters
 ## - `path`: File path string.
 ##
 ## ### Returns
 ## The parsed `TomlDoc` instance.
+@cfg(feature = "io")
 pub function load_doc(path: string) -> TomlDoc
     let content = read_file(path)
     return toml_doc_new(parse_toml(content))
@@ -283,28 +290,37 @@ end
 
 ## Creates a new empty builder line buffer.
 ##
+## Requires the `builder` feature (default-on).
+##
 ## ### Returns
 ## An empty line array accepting `builder_add_*` entries.
+@cfg(feature = "builder")
 pub function builder() -> array
     return builder_new()
 end
 
 ## Serializes a builder buffer into a TOML formatted string.
 ##
+## Requires the `builder` feature (default-on).
+##
 ## ### Parameters
 ## - `b`: Builder line buffer.
 ##
 ## ### Returns
 ## The joined TOML document string.
+@cfg(feature = "builder")
 pub function stringify(b: array) -> string
     return builder_build(b)
 end
 
 ## Writes a TOML string directly to a file.
 ##
+## Requires the `io` feature (default-on).
+##
 ## ### Parameters
 ## - `path`: File path string.
 ## - `toml_str`: TOML document string.
+@cfg(feature = "io")
 pub function dump_file(path: string, toml_str: string)
     return write_file(path, toml_str)
 end

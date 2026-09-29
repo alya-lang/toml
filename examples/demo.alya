@@ -115,6 +115,14 @@ auth_required = true
     say "  • New TLS flag: {tls_flag}"
     say ""
 
+    @cfg(feature = "builder")
+    demo_builder()
+
+    say "✓ Demo completed successfully!"
+end
+
+@cfg(feature = "builder")
+function demo_builder()
     # 8. Programmatic TOML Builder
     say "7. Generating TOML with TomlBuilder:"
     let b = toml::builder()
@@ -131,7 +139,5 @@ auth_required = true
     say "----------------------------------------"
     say out_toml
     say "----------------------------------------"
-    say "✓ Demo completed successfully!"
 end
-
 main()
