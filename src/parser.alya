@@ -315,7 +315,7 @@ end
 ##
 ## ### Returns
 ## `1` on pattern match, `0` otherwise.
-pub function is_date_or_time(s: string) -> int
+pub function is_date_or_time(s: string) -> bool
     let slen = len(s)
     if slen >= 10 and char_at(s, 4) == "-" and char_at(s, 7) == "-"
         return true
@@ -334,7 +334,7 @@ end
 ##
 ## ### Returns
 ## `1` when present, `0` otherwise.
-pub function has_char(s: string, target: string) -> int
+pub function has_char(s: string, target: string) -> bool
     let slen = len(s)
     let i = 0
     while i < slen

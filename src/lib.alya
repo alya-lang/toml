@@ -191,7 +191,7 @@ end
 ##
 ## ### Returns
 ## `1` when the path resolves, `0` otherwise.
-pub function has(doc, path_str: string) -> int
+pub function has(doc, path_str: string) -> bool
     let v = get(doc, path_str)
     return v is not null
 end
