@@ -27,8 +27,8 @@ end
 ## `1` when the character is a space or tab, `0` otherwise.
 pub function is_space(ch: string) -> int
     when ch
-        is " ", "\t" then return 1
-        else return 0
+        is " ", "\t" then return true
+        else return false
     end
 end
 
@@ -41,8 +41,8 @@ end
 ## `1` for space, tab, carriage return, or newline; `0` otherwise.
 pub function is_whitespace(ch: string) -> int
     when ch
-        is " ", "\t", "\r", "\n" then return 1
-        else return 0
+        is " ", "\t", "\r", "\n" then return true
+        else return false
     end
 end
 
@@ -91,8 +91,8 @@ end
 ## `1` when the character is a binary digit, `0` otherwise.
 pub function is_bin_digit(ch: string) -> int
     when ch
-        is "0", "1" then return 1
-        else return 0
+        is "0", "1" then return true
+        else return false
     end
 end
 
@@ -118,7 +118,7 @@ end
 ## `1` when the key exists, `0` otherwise.
 pub function _map_has(m, key: string) -> int
     if m is null
-        return 0
+        return false
     end
-    return key in m ? 1 : 0
+    return key in m ? true : false
 end

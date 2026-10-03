@@ -113,7 +113,7 @@ pub function get(doc, path_str: string)
     while i < slen
         let ch = char_at(path_str, i)
         if ch == "."
-            if _map_has(cur, seg) == 0
+            if _map_has(cur, seg) == false
                 return null
             end
             cur = cur[seg]
@@ -124,7 +124,7 @@ pub function get(doc, path_str: string)
         i += 1
     end
     if len(seg) > 0
-        if _map_has(cur, seg) == 0
+        if _map_has(cur, seg) == false
             return null
         end
         return cur[seg]

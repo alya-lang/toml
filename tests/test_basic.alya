@@ -167,7 +167,7 @@ function test_tomldoc_struct_methods(r)
     runner_assert_eq(r, doc_obj.get_int("service.port"), 9000, "doc.get_int struct method")
     runner_assert(r, doc_obj.get_bool("service.enabled"), "doc.get_bool struct method")
     runner_assert(r, doc_obj.has("service.port"), "doc.has existing key")
-    runner_assert(r, doc_obj.has("service.missing") == 0, "doc.has missing key")
+    runner_assert(r, doc_obj.has("service.missing") == false, "doc.has missing key")
 
     doc_obj.set("service.host", "0.0.0.0")
     runner_assert_str_eq(r, doc_obj.get_str("service.host"), "0.0.0.0", "doc.set struct method")

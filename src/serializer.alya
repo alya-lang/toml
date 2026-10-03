@@ -49,17 +49,17 @@ pub function format_key(k: string) -> string
     if klen == 0
         return "\"\""
     end
-    let needs_quote = 0
+    let needs_quote = false
     let i = 0
     while i < klen
         let ch = char_at(k, i)
-        if is_bare_key_char(ch) == 0
-            needs_quote = 1
+        if is_bare_key_char(ch) == false
+            needs_quote = true
             break
         end
         i += 1
     end
-    if needs_quote == 1
+    if needs_quote == true
         return format_string(k)
     else
         return k
@@ -103,12 +103,12 @@ pub function format_array_str(items: array) -> string
         return "[]"
     end
     let res = "["
-    let first = 1
+    let first = true
     for item in items
-        if first == 0
+        if first == false
             res += ", "
         end
-        first = 0
+        first = false
         res += format_string(item)
     end
     res += "]"
@@ -127,12 +127,12 @@ pub function format_array_int(items: array) -> string
         return "[]"
     end
     let res = "["
-    let first = 1
+    let first = true
     for item in items
-        if first == 0
+        if first == false
             res += ", "
         end
-        first = 0
+        first = false
         res += str(item)
     end
     res += "]"
@@ -151,12 +151,12 @@ pub function format_array_bool(items: array) -> string
         return "[]"
     end
     let res = "["
-    let first = 1
+    let first = true
     for item in items
-        if first == 0
+        if first == false
             res += ", "
         end
-        first = 0
+        first = false
         res += format_bool(item)
     end
     res += "]"

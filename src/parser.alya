@@ -318,12 +318,12 @@ end
 pub function is_date_or_time(s: string) -> int
     let slen = len(s)
     if slen >= 10 and char_at(s, 4) == "-" and char_at(s, 7) == "-"
-        return 1
+        return true
     end
     if slen >= 8 and char_at(s, 2) == ":" and char_at(s, 5) == ":"
-        return 1
+        return true
     end
-    return 0
+    return false
 end
 
 ## Checks whether a string contains a target character.
@@ -339,11 +339,11 @@ pub function has_char(s: string, target: string) -> int
     let i = 0
     while i < slen
         if char_at(s, i) == target
-            return 1
+            return true
         end
         i += 1
     end
-    return 0
+    return false
 end
 
 ## Skips whitespace and `#` comments specifically inside arrays.
@@ -551,9 +551,9 @@ pub function parse_value(text: string, pos: int, text_len: int)
         return parse_oct(tok), pos
     elif tlen >= 2 and (substring(tok, 0, 2) == "0b" or substring(tok, 0, 2) == "0B")
         return parse_bin(tok), pos
-    elif is_date_or_time(tok) == 1
+    elif is_date_or_time(tok) == true
         return tok, pos
-    elif has_char(tok, ".") == 1 or has_char(tok, "e") == 1 or has_char(tok, "E") == 1
+    elif has_char(tok, ".") == true or has_char(tok, "e") == true or has_char(tok, "E") == true
         return parse_dec_float(tok), pos
     else
         return parse_dec_int(tok), pos
@@ -567,7 +567,7 @@ end
 ## - `key_str`: Possibly dotted key string.
 ## - `val`: Value to store.
 pub function set_dotted_key_value(target, key_str: string, val)
-    if has_char(key_str, ".") == 0
+    if has_char(key_str, ".") == false
         target[key_str] = val
         return
     end
@@ -582,7 +582,7 @@ pub function set_dotted_key_value(target, key_str: string, val)
         if ch == "\""
             in_quotes = 1 - in_quotes
         elif ch == "." and in_quotes == 0
-            if _map_has(cur, seg) == 0
+            if _map_has(cur, seg) == false
                 cur[seg] = map()
             end
             cur = cur[seg]
@@ -616,7 +616,7 @@ pub function get_or_create_section(root, section_name: string)
         if ch == "\""
             in_quotes = 1 - in_quotes
         elif ch == "." and in_quotes == 0
-            if _map_has(cur, seg) == 0
+            if _map_has(cur, seg) == false
                 cur[seg] = map()
             end
             cur = cur[seg]
@@ -627,7 +627,7 @@ pub function get_or_create_section(root, section_name: string)
         i += 1
     end
     if len(seg) > 0
-        if _map_has(cur, seg) == 0
+        if _map_has(cur, seg) == false
             cur[seg] = map()
         end
         cur = cur[seg]
@@ -654,7 +654,7 @@ pub function append_array_table_section(root, section_name: string)
         if ch == "\""
             in_quotes = 1 - in_quotes
         elif ch == "." and in_quotes == 0
-            if _map_has(cur, seg) == 0
+            if _map_has(cur, seg) == false
                 cur[seg] = map()
             end
             cur = cur[seg]
@@ -665,7 +665,7 @@ pub function append_array_table_section(root, section_name: string)
         i += 1
     end
     if len(seg) > 0
-        if _map_has(cur, seg) == 0
+        if _map_has(cur, seg) == false
             cur[seg] = []
         end
         let arr = cur[seg]
