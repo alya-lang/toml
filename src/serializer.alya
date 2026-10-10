@@ -34,7 +34,7 @@ pub function format_string(s: string) -> string
         end
         i += 1
     end
-    return "\"{res}\""
+    return f"\"{res}\""
 end
 
 ## Formats a key, quoting it when it holds non-bare characters.
@@ -181,7 +181,7 @@ end
 ## - `b`: Builder line buffer.
 ## - `comment`: Comment text.
 pub function builder_add_comment(b: array, comment: string)
-    b.push("# {comment}\n")
+    b.push(f"# {comment}\n")
 end
 
 ## Appends a blank line to the builder buffer.
@@ -201,7 +201,7 @@ end
 pub function builder_add_str(b: array, key: string, val: string)
     let fk = format_key(key)
     let fv = format_string(val)
-    b.push("{fk} = {fv}\n")
+    b.push(f"{fk} = {fv}\n")
 end
 
 ## Appends a `key = 123` entry to the builder buffer.
@@ -212,7 +212,7 @@ end
 ## - `val`: Integer value.
 pub function builder_add_int(b: array, key: string, val: int)
     let fk = format_key(key)
-    b.push("{fk} = {val}\n")
+    b.push(f"{fk} = {val}\n")
 end
 
 ## Appends a `key = 1.5` entry to the builder buffer.
@@ -223,7 +223,7 @@ end
 ## - `val_str`: Pre-formatted float string.
 pub function builder_add_float(b: array, key: string, val_str: string)
     let fk = format_key(key)
-    b.push("{fk} = {val_str}\n")
+    b.push(f"{fk} = {val_str}\n")
 end
 
 ## Appends a `key = true` entry to the builder buffer.
@@ -235,7 +235,7 @@ end
 pub function builder_add_bool(b: array, key: string, val)
     let fk = format_key(key)
     let fv = format_bool(val)
-    b.push("{fk} = {fv}\n")
+    b.push(f"{fk} = {fv}\n")
 end
 
 ## Appends a string array entry to the builder buffer.
@@ -247,7 +247,7 @@ end
 pub function builder_add_array_str(b: array, key: string, items: array)
     let fk = format_key(key)
     let fv = format_array_str(items)
-    b.push("{fk} = {fv}\n")
+    b.push(f"{fk} = {fv}\n")
 end
 
 ## Appends an integer array entry to the builder buffer.
@@ -259,7 +259,7 @@ end
 pub function builder_add_array_int(b: array, key: string, items: array)
     let fk = format_key(key)
     let fv = format_array_int(items)
-    b.push("{fk} = {fv}\n")
+    b.push(f"{fk} = {fv}\n")
 end
 
 ## Appends a `[section]` table header to the builder buffer.
@@ -268,7 +268,7 @@ end
 ## - `b`: Builder line buffer.
 ## - `section_name`: Section name string.
 pub function builder_add_table(b: array, section_name: string)
-    b.push("\n[{section_name}]\n")
+    b.push(f"\n[{section_name}]\n")
 end
 
 ## Appends a `[[section]]` array-table header to the builder buffer.
@@ -277,7 +277,7 @@ end
 ## - `b`: Builder line buffer.
 ## - `section_name`: Section name string.
 pub function builder_add_array_table(b: array, section_name: string)
-    b.push("\n[[{section_name}]]\n")
+    b.push(f"\n[[{section_name}]]\n")
 end
 
 ## Serializes the builder buffer into a TOML formatted string.

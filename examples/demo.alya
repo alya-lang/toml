@@ -64,16 +64,16 @@ auth_required = true
     let debug_mode = toml::get_bool(doc, "server.debug")
     let max_conns = toml::get_int(doc, "server.max_connections")
 
-    say "  • Package: {pkg_name} v{version}"
-    say "  • Server:  {host}:{port}"
-    say "  • Debug:   {debug_mode}"
-    say "  • Max Conn:{max_conns}"
+    say f"  • Package: {pkg_name} v{version}"
+    say f"  • Server:  {host}:{port}"
+    say f"  • Debug:   {debug_mode}"
+    say f"  • Max Conn:{max_conns}"
     say ""
 
     # 4. Inline Table Access
     say "3. Reading inline table credentials:"
     let db_user = toml::get_str(doc, "database.credentials.user")
-    say "  • DB User: {db_user}"
+    say f"  • DB User: {db_user}"
     say ""
 
     # 5. Dotted Table Hierarchy
@@ -83,8 +83,8 @@ auth_required = true
     let us_ip = toml::get_str(doc, "servers.us_east.ip")
     let us_role = toml::get_str(doc, "servers.us_east.role")
 
-    say "  • EU Node: {eu_ip} ({eu_role})"
-    say "  • US Node: {us_ip} ({us_role})"
+    say f"  • EU Node: {eu_ip} ({eu_role})"
+    say f"  • US Node: {us_ip} ({us_role})"
     say ""
 
     # 6. Array of Tables
@@ -100,7 +100,7 @@ auth_required = true
         if r_auth
             auth_label = "Protected"
         end
-        say "  • Route [{auth_label}]: {r_path}"
+        say f"  • Route [{auth_label}]: {r_path}"
         i += 1
     end
     say ""
@@ -111,8 +111,8 @@ auth_required = true
     toml::set(doc, "server.tls_enabled", true)
     let new_port = toml::get_int(doc, "server.port")
     let tls_flag = toml::get_bool(doc, "server.tls_enabled")
-    say "  • Updated port: {new_port}"
-    say "  • New TLS flag: {tls_flag}"
+    say f"  • Updated port: {new_port}"
+    say f"  • New TLS flag: {tls_flag}"
     say ""
 
     @cfg(feature = "builder")
